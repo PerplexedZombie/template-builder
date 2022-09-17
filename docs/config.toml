@@ -1,0 +1,12 @@
+# You can change template names, but the template name must exist in src/templates/
+template = 'sproc_template.sql'
+# Where you want the file to be saved to.
+path = '/home/tmd/sproc_build/'
+
+# Info to be written into file.
+author = 'Terry Dullaghan'
+error_number = 1515
+error_blurb = 'Data is invalid.'
+db_ref = 'SpecialDB'
+description = 'This is what happens when you let monkeys use type writers...'
+commentary = 'Have you tried not hiring monkeys?'
