@@ -14,8 +14,14 @@ Commentary:     {{ commentary }}
 */
 
 
-create procedure Error_{{error_number}}
-    begin
-        /*<Place code here>*/
-    end;
+CREATE Error_{{error_number}} @CVDate DATE
+AS
+    BEGIN
+--         Parameter sniffing OP.
+        DECLARE @MonthEnd DATE = COALESCE(@CVDate, CONVERT(varchar,dateadd(d,-(day(getdate())),getdate()),106))
+
+        /*Put Code Here*/
+        ;
+    END
+GO
 

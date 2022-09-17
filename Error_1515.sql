@@ -2,7 +2,7 @@
 /*
 
 Author: Terry Dullaghan
-Created: 2022-09-17
+Created: 2022-09-18
 
 Error_1515 - Data is invalid. (SpecialDB):
 
@@ -14,7 +14,13 @@ Commentary:     Have you tried not hiring monkeys?
 */
 
 
-create procedure Error_1515
-    begin
-        /*<Place code here>*/
-    end;
+CREATE Error_1515 @CVDate DATE
+AS
+    BEGIN
+--         Parameter sniffing OP.
+        DECLARE @MonthEnd DATE = COALESCE(@CVDate, CONVERT(varchar,dateadd(d,-(day(getdate())),getdate()),106))
+
+        /*Put Code Here*/
+        ;
+    END
+GO
