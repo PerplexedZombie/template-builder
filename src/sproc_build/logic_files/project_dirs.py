@@ -13,7 +13,7 @@ def global_project_file_ref(dir_str: Optional[str] = None) -> Path:
         dir_str = modules['__main__'].__file__
 
     project_parts: List[str] = list(Path(dir_str).absolute().parts)
-    print(project_parts)
+
     try:
         # We know path will look like "../sproc_build/src/.." And we want the sproc_build above src.
         # Remove end items until we hit 'src'
