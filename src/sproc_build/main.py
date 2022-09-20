@@ -20,7 +20,11 @@ conf_file: Path = project_dir.joinpath('docs/config.toml')
 with conf_file.open(mode='r') as file:
     toml_config: TOMLDocument = load(file)
 
-log_path: Path = Path(toml_config['logging_path'])
+# Mypy OP. Guido pls nerf.
+log_path_str: str = str(toml_config['logging_path'])
+assert isinstance(log_path_str, str)
+
+log_path: Path = Path(log_path_str)
 setup_logger(log_path)
 
 toml_config.add('created_on', created_stamp)

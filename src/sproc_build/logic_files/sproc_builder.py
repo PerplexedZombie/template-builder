@@ -6,15 +6,14 @@ from sys import platform
 from typing import Dict
 from typing import List
 from typing import Union
-from loguru import logger
 
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from jinja2 import Template
-
-from src.sproc_build.models.sproc_config import SprocConfig
+from loguru import logger
 
 from src.sproc_build.logic_files.project_dirs import global_project_file_ref
+from src.sproc_build.models.sproc_config import SprocConfig
 
 
 class SprocBuilder:
@@ -28,7 +27,7 @@ class SprocBuilder:
         self.environment: Environment = Environment(loader=FileSystemLoader(self.template_dir))
         self.template: Template = self.environment.get_template(self.config.template)
         self.content: str = self.template.render(**self.content_kwargs)
-        self.clean_path: Path
+        self.clean_path: Path = self._clean_file_path()
 
     def _fix_wsl_issue(self, path: str) -> str:
         """
@@ -38,27 +37,35 @@ class SprocBuilder:
         :return: String representation of WSL-Window's path eg "/mnt/c/Users/Admin/Documents/"
         """
         logger.trace(f'Suspect path: {path}')
+
         fixed_path_list: List[str] = ['/mnt']
+
         split_path: List[str] = path.split(':')
         split_path[0] = split_path[0].lower()
+
         fixed_path_list.extend(split_path)
+
         fixed_path: str = '/'.join(fixed_path_list)
+
         logger.info('Fixed WSL issue')
         logger.trace(f'Fixed path: {fixed_path}')
         return fixed_path
 
-    def _clean_file_path(self) -> None:
+    def _clean_file_path(self) -> Path:
         """
         Convert string file path into Path object.\n
         Path object is OS-agnostic whilst also validating it as a real path.\n
         Adds attribute self.clean_path to instance.
         """
         win_path_regex: Pattern = compile(r'^[A-Z]:\\{1,2}.+')
+
         if platform == 'linux' and win_path_regex.match(self.provided_path):
             logger.info('Looks like you\'re using WSL, will need to fix this..')
             self.provided_path = self._fix_wsl_issue(self.provided_path)
+
         converted_to_posix: str = PureWindowsPath(self.provided_path).as_posix()
-        self.clean_path: Path = Path(converted_to_posix)
+
+        return Path(converted_to_posix)
 
     def _produce_full_path_to_file(self) -> Path:
         """
@@ -69,10 +76,14 @@ class SprocBuilder:
         return full_file
 
     def write_sproc(self) -> None:
-        self._clean_file_path()
-
         full_file: Path = self._produce_full_path_to_file()
-        # TODO: Add try block.
-        with full_file.open(mode='w') as scribe:
-            scribe.write(self.content)
-            logger.success(f'Wrote file Error_{self.config.error_number}.sql to:\t"{self.clean_path}"')
+
+        if self.clean_path.is_dir():
+            try:
+                with full_file.open(mode='w') as scribe:
+                    scribe.write(self.content)
+                    logger.success(f'Wrote file "Error_{self.config.error_number}.sql" to:\t"{self.clean_path}"')
+            except PermissionError(f'Tried to write file "{self.config.error_number}.sql" but was unable to.'):
+                exit(1)
+        else:
+            raise NotADirectoryError(f'Provided path "{self.clean_path}" not a directory')
