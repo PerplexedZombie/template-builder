@@ -1,6 +1,8 @@
 from pathlib import Path
+from pydoc import locate
 from typing import Any
 from typing import Dict
+from typing import List
 
 from loguru import logger
 from tomlkit import TOMLDocument
@@ -40,18 +42,46 @@ def _setup() -> AppModel:
     return app
 
 
+def _module_to_classname(name_str: str) -> str:
+    name_list: List[str] = []
+
+    file_name: str = name_str.split('.')[0]
+    name_list.append(file_name)
+
+    class_name: str = ''.join([part.lower().title()
+                               for part in file_name.split('_')])
+    name_list.append(class_name)
+    path_to_class: str = '.'.join(name_list)
+
+    return path_to_class
+
+
+def _get_model(template_name: str) -> object:
+    m_to_c: str = _module_to_classname(template_name)
+    fpath: str = f'models.{m_to_c}'
+    loaded_class: object = locate(fpath)
+
+    return loaded_class
+
+
 def build():
     app: AppModel = _setup()
 
     logger.info('Marking blueprints for builder.')
-    blueprint: BuilderConfigBase = BuilderConfigBase(**app.file_settings)
+    blueprint: object = _get_model(app.file_settings['template'])
     logger.success('Blueprints marked.')
     logger.debug(f'{blueprint=})')
 
+    logger.info('Building model')
+    model: BuilderConfigBase = blueprint(**app.file_settings)
+    logger.success('Built model.')
+    logger.debug(f'{model=})')
+
     # Write my file - save ~7 minutes.
-    builder: TemplateBuilder = TemplateBuilder(blueprint, app.path)
+    builder: TemplateBuilder = TemplateBuilder(model, app.path)
     builder.build_file()
 
 
-# TODO: Clean this file, maybe extend logging..?
+# TODO: Convert to CLI? Textual?
+# TODO: Reverse a Jinja template..?
 build()

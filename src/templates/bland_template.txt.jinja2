@@ -1,0 +1,13 @@
+This file was written by {{ author }}.
+
+Mostly to prove that the {{ code_type|lower }} code worked.
+
+Let's list some things:
+{% for row in row_list -%}
+    {{ loop.index }}. {% if loop.index is even %}{{ "'%s'"|format(row|title) }}{% else %}{{ row|title }}{% endif %}
+{% endfor %}
+
+Haha, managing to quote things is complicated.
+
+created on {{ created_on }}
+(ISO 8601 represent!)

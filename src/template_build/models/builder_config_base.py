@@ -8,4 +8,3 @@ class BuilderConfigBase(BaseModel):
 
     class Config:
         extra = Extra.allow
-

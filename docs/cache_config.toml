@@ -6,13 +6,10 @@ path = '/home/tmd/sproc_build/'
 
 [file_settings]
 # Name of file to be built.
-file_name = 'Testing_success.sql'
+file_name = 'Testing_success.txt'
 # You can change template names, but the template name must exist in src/templates/
-template = 'sproc_template.sql'
+template = 'bland_template.txt.jinja2'
 # Info to be written into file.
 author = 'Terry Dullaghan'
-error_number = 1515
-error_blurb = 'Data is invalid.'
-db_ref = 'SpecialDB'
-description = 'This is what happens when you let monkeys use type writers...'
-commentary = 'Have you tried not hiring monkeys?'
+code_type = 'Dynamic'
+row_list = ['Coding', 'Climbing', 'gaming', 'playing games - does that count?', 'working', 'Is this a list?']
