@@ -1,6 +1,6 @@
 from pathlib import Path
-from typing import Dict
 from typing import Any
+from typing import Dict
 
 from loguru import logger
 from tomlkit import TOMLDocument
@@ -9,9 +9,8 @@ from tomlkit import load
 from src.template_build.logic_files.logger import setup_logger
 from src.template_build.logic_files.project_dirs import global_project_file_ref
 from src.template_build.logic_files.template_builder import TemplateBuilder
-
-from src.template_build.models.builder_config_base import BuilderConfigBase
 from src.template_build.models._app_model import AppModel
+from src.template_build.models.builder_config_base import BuilderConfigBase
 
 
 def _setup() -> AppModel:
