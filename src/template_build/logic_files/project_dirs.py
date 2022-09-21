@@ -26,7 +26,7 @@ def global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
     project_parts: List[str] = list(Path(dir_ref).absolute().parts)
 
     try:
-        # We know path will look like "../sproc_build/src/.." And we want the sproc_build above src.
+        # We know path will look like "../template_build/src/.." And we want the template_build above src.
         # Remove end items until we hit 'src'
         while project_parts[-1] != 'src':
             project_parts.pop()
