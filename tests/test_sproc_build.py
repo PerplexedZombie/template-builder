@@ -1,4 +1,4 @@
-from src.sproc_build import __version__
+from src.template_build import __version__
 
 
 def test_version():

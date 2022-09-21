@@ -12,20 +12,21 @@ from jinja2 import FileSystemLoader
 from jinja2 import Template
 from loguru import logger
 
-from src.sproc_build.logic_files.project_dirs import global_project_file_ref
-from src.sproc_build.models.sproc_config import SprocConfig
+from src.template_build.logic_files.project_dirs import global_project_file_ref
+from src.template_build.models.builder_config_base import BuilderConfigBase
 
 
-class SprocBuilder:
+class TemplateBuilder:
 
-    def __init__(self, config: SprocConfig):
+    def __init__(self, config: BuilderConfigBase, path: Union[str, Path]):
         self.project_dir = global_project_file_ref()
         self.template_dir: str = Path(self.project_dir.joinpath('src/templates/')).as_posix()
-        self.provided_path: str = config.path
-        self.config: SprocConfig = config
+        self.template_name: str = config.template
+        self.provided_path: Union[str, Path] = path
+        self.config: BuilderConfigBase = config
         self.content_kwargs: Dict[str, Union[str, int]] = self.config.dict(exclude={'template', 'path', 'logging_path'})
         self.environment: Environment = Environment(loader=FileSystemLoader(self.template_dir))
-        self.template: Template = self.environment.get_template(self.config.template)
+        self.template: Template = self.environment.get_template(self.template_name)
         self.content: str = self.template.render(**self.content_kwargs)
         self.clean_path: Path = self._clean_file_path()
 
@@ -72,18 +73,18 @@ class SprocBuilder:
         Join filename to output path.\n
         :return: Path object ending at filename, rather than directory.
         """
-        full_file: Path = self.clean_path.joinpath(f'Error_{self.config.error_number}.sql')
+        full_file: Path = self.clean_path.joinpath(f'{self.config.file_name}')
         return full_file
 
-    def write_sproc(self) -> None:
+    def build_file(self) -> None:
         full_file: Path = self._produce_full_path_to_file()
 
         if self.clean_path.is_dir():
             try:
                 with full_file.open(mode='w') as scribe:
                     scribe.write(self.content)
-                    logger.success(f'Wrote file "Error_{self.config.error_number}.sql" to:\t"{self.clean_path}"')
-            except PermissionError(f'Tried to write file "{self.config.error_number}.sql" but was unable to.'):
+                    logger.success(f'Wrote file "{self.config.file_name}" to:\t"{self.clean_path}"')
+            except PermissionError(f'Tried to write file "{self.config.file_name}" but was unable to.'):
                 exit(1)
         else:
             raise NotADirectoryError(f'Provided path "{self.clean_path}" not a directory')
