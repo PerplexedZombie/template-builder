@@ -1,61 +1,38 @@
+import os.path
 from os import PathLike
-import os
-import sys
 from pathlib import Path
-from sys import exit
-from sys import modules
-from typing import List
-from typing import Union
-from typing import Generator
-from re import compile
 from re import Pattern
-from typer import get_app_dir
+from re import compile
+from sys import exit
+from sys import path
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Union
 
 from loguru import logger
 
 
 # This seems unnecessary, but I've done it. Find the project dir from anywhere...
 def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
+    project_root: Optional[Path] = None
+    if dir_str is None:
+        # Dumb hack:
+        paths: Generator[Path] = (Path(path_row) for path_row in path)
+        for i in paths:
+            if i.name != 'template-builder':
+                continue
+            if i.name == 'template-builder':
+                project_root = Path(os.path.realpath(i))
 
-    # Dumb hack:
-    paths: Generator[Path] = (Path(path_row) for path_row in sys.path)
-    project_root: Path = Path()
-    for i in paths:
-        if i.suffix != 'template-builder':
-            continue
-        if i.suffix == 'template-builder':
-            project_root = Path(os.path.realpath(i))
+        if project_root is None:
+            logger.error('Cannot find dir path... Maybe pass a path ref?')
+            logger.debug(f'{path=}')
+            exit(1)
 
-    logger.debug(f'{sys.path=}')
-
-    # dir_ref: str
-    # if dir_str is None:
-    #     logger.debug(f'internet solution: {os.path.realpath(sys.path[0])}')
-    #     # if modules['__main__'].__file__ is None:
-    #     #     logger.critical('Cause for alarm. You need to provide a hard path.')
-    #     # else:
-    #     #     dir_ref = modules['__main__'].__file__
-    #
-    # elif isinstance(dir_str, str):
-    #     dir_ref = dir_str
-    #
-    # assert isinstance(dir_ref, str)
-    # project_parts: List[str] = list(Path(dir_ref).absolute().parts)
-    #
-    # try:
-    #     # We know path will look like "../template-builder/src/.." And we want the template-builder above src.
-    #     # Remove end items until we hit 'src'
-    #     while project_parts[-1] != 'src':
-    #         project_parts.pop()
-    #
-    #     # Remove the 'src'
-    #     project_parts.pop()
-    #
-    #     project_root: Path = Path('/'.join(project_parts)[1:])
-    # except IndexError:
-    #     logger.error('You have called this from a weird place.. Maybe pass a path ref?.')
-    #     logger.debug(f'{Path(dir_ref).absolute().as_posix()=}')
-    #     exit(1)
+    elif isinstance(dir_str, str):
+        project_root = Path(dir_str)
+        assert project_root.is_dir(), f'passed: "{dir_str}"\n This is not a directory.'
 
     return project_root
 
@@ -67,15 +44,16 @@ def get_proj_conf_file() -> Path:
     return conf
 
 
-def list_models() -> List[str]:
+# Should this function live here?
+def list_templates() -> List[str]:
     proj: Path = get_global_project_file_ref()
-    model_dir: Path = proj.joinpath('src/template_builder/models/')
-    logger.debug(f'{model_dir.is_dir()=}')
+    model_dir: Path = proj.joinpath('src/templates/')
+    # logger.debug(f'{model_dir.is_dir()=}')
 
-    template_pattern: Pattern = compile(r'.+(?:_template).py$')
+    template_pattern: Pattern = compile(r'.+(?:_template)')
 
-    model_list: List[str] = [model_file for model in model_dir.iterdir()
-                             if template_pattern.match(model_file := model.name)]
-    return model_list
+    template_list: List[str] = [template_file for template in model_dir.iterdir()
+                                if template_pattern.match(template_file := template.name)]
+    return template_list
 
 # TODO: Tidy this file.

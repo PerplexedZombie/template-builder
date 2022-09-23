@@ -1,21 +1,20 @@
 import random
-from pathlib import Path
-from typing import Any
+import subprocess as sp
 from typing import Dict
 from typing import List
 
-from loguru import logger
 from rich import print
 from rich.prompt import Prompt
-from tomlkit import TOMLDocument
-from tomlkit import dump
-from tomlkit import load
-from tomlkit import table
 from tomlkit.items import Table
 from typer import Typer
 
+from src.template_builder.logic_files.config_manip import _add_to_cache_config
+from src.template_builder.logic_files.config_manip import _populate_model_fields
+from src.template_builder.logic_files.config_manip import _reset_cache_config
+from src.template_builder.logic_files.config_manip import _update_cache_config
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
-from src.template_builder.logic_files.project_dirs import list_models
+from src.template_builder.logic_files.project_dirs import list_templates
+from src.template_builder.logic_files.build_file import build
 
 cli_app: Typer = Typer()
 
@@ -28,38 +27,12 @@ def _invalid_action(ref: int) -> str:
     return errors[ref]
 
 
-def _update_cache_config(header: str, data: Dict[str, Any]) -> None:
-    config_path: Path = get_proj_conf_file()
-    # logger.debug(f'{config_path=}')
-    with config_path.open('r') as file:
-        config: TOMLDocument = load(file)
-
-    config[header].update(data)
-    with config_path.open('w') as file:
-        dump(config, file)
-
-
-def _reset_cache_config() -> None:
-    config_path: Path = get_proj_conf_file()
-    # logger.debug(f'{config_path=}')
-    with config_path.open('r') as file:
-        config: TOMLDocument = load(file)
-
-    config.pop('file_settings')
-
-    file_settings: Table = table()
-    file_settings.add('template', '')
-
-    config.add('file_settings', file_settings)
-    with config_path.open('w') as file:
-        dump(config, file)
-
-
 @cli_app.command('set-model')
 def choose_model():
-    models: List[str] = list_models()
+    models: List[str] = list_templates()
 
-    logger.debug(f'{models=}')
+    # TODO: Make this a Rich table?
+    # logger.debug(f'{models=}')
     for index, model in enumerate(models, start=1):
         print(f'{str(index)}. {model}')
 
@@ -76,7 +49,7 @@ def choose_model():
             resp_i: int = int(resp)
             if resp_i == 0:
                 print(_invalid_action(1))
-            elif resp_i > (model_len := len(models)+1):
+            elif resp_i > (model_len := len(models)):
                 print(_invalid_action(1))
 
             elif resp_i <= model_len:
@@ -88,9 +61,12 @@ def choose_model():
         else:
             print(_invalid_action(1))
 
+    file_settings: Table = _populate_model_fields(selection)
     _reset_cache_config()
+    _add_to_cache_config('file_settings', file_settings)
     _update_cache_config('file_settings', {'template': selection})
     print(f'[green]Thank you for picking {selection}![/green]')
+    sp.run(['/mnt/c/Program Files/Notepad++/notepad++.exe', get_proj_conf_file().as_posix()])
     print(f'[green]config file has been updated accordingly.[/green]')
 
 
@@ -102,5 +78,10 @@ def another():
     txt: str = f'[{colour}]This does something![/{colour}]'
     print(f'{txt}')
 
-# TODO: ALOT.. fix the git issue? double check project dirs, futher update toml.
+
+@cli_app.command('build')
+def smith_template():
+    build()
+
+# TODO: Extend logging
 # TODO: Move certain logic out of cli?

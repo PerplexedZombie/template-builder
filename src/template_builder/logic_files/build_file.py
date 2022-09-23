@@ -1,8 +1,9 @@
+import importlib
 from pathlib import Path
-from pydoc import locate
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Tuple
 
 from loguru import logger
 from tomlkit import TOMLDocument
@@ -43,40 +44,56 @@ def _setup() -> AppModel:
     return app
 
 
-def _module_to_classname(name_str: str) -> str:
-    name_list: List[str] = []
-
+def _module_to_classname(name_str: str) -> Tuple[str, str]:
     file_name: str = name_str.split('.')[0]
-    name_list.append(file_name)
 
     class_name: str = ''.join([part.lower().title()
                                for part in file_name.split('_')])
-    name_list.append(class_name)
-    path_to_class: str = '.'.join(name_list)
 
-    return path_to_class
+    return file_name, class_name
 
 
-def _get_model(template_name: str) -> object:
-    m_to_c: str = _module_to_classname(template_name)
-    fpath: str = f'models.{m_to_c}'
-    loaded_class: object = locate(fpath)
+def _get_model(template_name: str) -> BuilderConfigBase:
+    file_: str
+    class_: str
+    file_, class_ = _module_to_classname(template_name)
 
+    module = importlib.import_module(f'src.template_builder.models.{file_}', class_)
+
+    loaded_class: BuilderConfigBase = getattr(module, class_)
     return loaded_class
+
+
+def _get_schema_from_model(model: BuilderConfigBase):
+    model_props = model.schema()['properties']
+
+    fields: List[Tuple[str, str, Any]] = []
+    update_fields = fields.append
+    for val_name, val_type_ph in model_props.items():
+        if (val_type := val_type_ph.get('type')) not in ('array', 'object'):
+            update_fields((val_name, val_type, val_type_ph.get('default', '')))
+
+        elif val_type_ph.get('type') == 'array':
+            val_type = f'List[{val_type_ph["items"].get("type")}]'
+            update_fields((val_name, val_type, val_type_ph.get('default', '')))
+
+        elif val_type_ph.get('type') == 'object':
+            val_type = f'Dict[str, {val_type_ph["additionalProperties"].get("type")}]'
+            update_fields((val_name, val_type, val_type_ph.get('default', '')))
+
+    return fields
 
 
 def build():
     app: AppModel = _setup()
 
-    logger.info('Marking blueprints for builder.')
-    blueprint: object = _get_model(app.file_settings['template'])
+    logger.info('Marking blueprints')
+    blueprint: BuilderConfigBase = _get_model(app.file_settings['template'])
     logger.success('Blueprints marked.')
-    logger.debug(f'{blueprint=})')
-
+    # logger.debug(f'{model=})')
     logger.info('Building model')
-    model: BuilderConfigBase = blueprint(**app.file_settings)
+    model = blueprint(**app.file_settings)
     logger.success('Built model.')
-    logger.debug(f'{model=})')
 
     # Write my file - save ~7 minutes.
     builder: TemplateBuilder = TemplateBuilder(model, app.path)

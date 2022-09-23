@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "template-builder"
-version = "2.0.0"
+version = "3.0.0"
 description = ""
 authors = ["Terry Dullaghan <t.ma.dullaghan@gmail.com>"]
 packages = [
@@ -24,4 +24,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-myli = "src.template_builder.main:main"
+mycli = "src.template_builder.main:main"

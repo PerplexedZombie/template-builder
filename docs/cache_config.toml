@@ -2,7 +2,24 @@
 # Where to store log files.
 logging_path = '/home/tmd/.log_files/'
 # Where you want the file to be saved to.
-path = 'C:/Users/zkddu/OneDrive/Documents'
+path = '/mnt/c/Users/zkddu/OneDrive/Documents'
 
 [file_settings]
-template = "bland_template.py"
+# string
+file_name = ""
+
+# string
+template = "bland_template.txt.jinja2"
+
+# string
+author = ""
+
+# string
+code_type = ""
+
+# List[string]
+row_list = [""]
+
+# string
+created_on = "2022-09-23"
+
