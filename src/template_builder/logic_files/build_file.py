@@ -8,17 +8,18 @@ from loguru import logger
 from tomlkit import TOMLDocument
 from tomlkit import load
 
-from src.template_build.logic_files.logger import setup_logger
-from src.template_build.logic_files.project_dirs import global_project_file_ref
-from src.template_build.logic_files.template_builder import TemplateBuilder
-from src.template_build.models._app_model import AppModel
-from src.template_build.models.builder_config_base import BuilderConfigBase
+from src.template_builder.logic_files.logger import setup_logger
+from src.template_builder.logic_files.project_dirs import get_global_project_file_ref
+from src.template_builder.logic_files.project_dirs import get_proj_conf_file
+from src.template_builder.logic_files.template_builder import TemplateBuilder
+from src.template_builder.models._app_model import AppModel
+from src.template_builder.models.builder_config_base import BuilderConfigBase
 
 
 def _setup() -> AppModel:
-    _project_dir: Path = global_project_file_ref()
+    _project_dir: Path = get_global_project_file_ref()
 
-    conf_file: Path = _project_dir.joinpath('docs/cache_config.toml')
+    conf_file: Path = get_proj_conf_file()
     with conf_file.open(mode='r') as file:
         toml_config: TOMLDocument = load(file)
 
@@ -81,7 +82,5 @@ def build():
     builder: TemplateBuilder = TemplateBuilder(model, app.path)
     builder.build_file()
 
-
 # TODO: Convert to CLI? Textual?
 # TODO: Reverse a Jinja template..?
-build()

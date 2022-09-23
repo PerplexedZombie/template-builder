@@ -12,14 +12,14 @@ from jinja2 import FileSystemLoader
 from jinja2 import Template
 from loguru import logger
 
-from src.template_build.logic_files.project_dirs import global_project_file_ref
-from src.template_build.models.builder_config_base import BuilderConfigBase
+from src.template_builder.logic_files.project_dirs import get_global_project_file_ref
+from src.template_builder.models.builder_config_base import BuilderConfigBase
 
 
 class TemplateBuilder:
 
     def __init__(self, config: BuilderConfigBase, path: Union[str, Path]):
-        self.project_dir = global_project_file_ref()
+        self.project_dir = get_global_project_file_ref()
         self.template_dir: str = Path(self.project_dir.joinpath('src/templates/')).as_posix()
         self.template_name: str = config.template
         self.provided_path: Union[str, Path] = path

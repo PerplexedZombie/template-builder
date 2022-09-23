@@ -1,8 +1,11 @@
 [tool.poetry]
-name = "sproc_build"
+name = "template-builder"
 version = "2.0.0"
 description = ""
 authors = ["Terry Dullaghan <t.ma.dullaghan@gmail.com>"]
+packages = [
+    { include = "src", from="." },
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -10,6 +13,7 @@ Jinja2 = "^3.1.2"
 tomlkit = "^0.11.4"
 pydantic = "^1.10.2"
 loguru = "^0.6.0"
+typer = {extras = ["all"], version = "^0.6.1"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -18,3 +22,6 @@ mypy = "^0.971"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+myli = "src.template_builder.main:main"
