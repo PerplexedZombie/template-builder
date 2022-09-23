@@ -2,14 +2,24 @@
 # Where to store log files.
 logging_path = '/home/tmd/.log_files/'
 # Where you want the file to be saved to.
-path = '/home/tmd/sproc_build/'
+path = '/mnt/c/Users/zkddu/OneDrive/Documents'
 
 [file_settings]
-# Name of file to be built.
-file_name = 'Testing_success.txt'
-# You can change template names, but the template name must exist in src/templates/
-template = 'bland_template.txt.jinja2'
-# Info to be written into file.
-author = 'Terry Dullaghan'
-code_type = 'Dynamic'
-row_list = ['Coding', 'Climbing', 'gaming', 'playing games - does that count?', 'working', 'Is this a list?']
+# string
+file_name = ""
+
+# string
+template = "bland_template.txt.jinja2"
+
+# string
+author = ""
+
+# string
+code_type = ""
+
+# List[string]
+row_list = [""]
+
+# string
+created_on = "2022-09-23"
+

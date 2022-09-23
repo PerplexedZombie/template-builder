@@ -1,4 +1,4 @@
-from src.template_build.models.builder_config_base import BuilderConfigBase
+from src.template_builder.models.builder_config_base import BuilderConfigBase
 from typing import List
 from datetime import datetime
 

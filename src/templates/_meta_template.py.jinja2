@@ -1,7 +1,0 @@
-from pydantic import BaseModel
-from typing import Any
-
-class {{template_name|capitalize}}Builder(BaseModel):
-    {% for attr in attr_list %}
-        {{ attr }}{{ ': Any' }}
-    {% endfor %}
