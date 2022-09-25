@@ -64,7 +64,7 @@ def _get_model(template_name: str) -> BuilderConfigBase:
     return loaded_class
 
 
-def _get_schema_from_model(model: BuilderConfigBase):
+def _get_schema_from_model(model: BuilderConfigBase) -> List[Tuple[str, str, Any]]:
     model_props = model.schema()['properties']
 
     fields: List[Tuple[str, str, Any]] = []
@@ -84,7 +84,7 @@ def _get_schema_from_model(model: BuilderConfigBase):
     return fields
 
 
-def build():
+def build() -> None:
     app: AppModel = _setup()
 
     logger.info('Marking blueprints')
@@ -99,5 +99,5 @@ def build():
     builder: TemplateBuilder = TemplateBuilder(model, app.path)
     builder.build_file()
 
-# TODO: Convert to CLI? Textual?
+# TODO: Add error handling?
 # TODO: Reverse a Jinja template..?

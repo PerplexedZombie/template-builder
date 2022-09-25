@@ -32,7 +32,9 @@ def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
 
     elif isinstance(dir_str, str):
         project_root = Path(dir_str)
-        assert project_root.is_dir(), f'passed: "{dir_str}"\n This is not a directory.'
+        if not project_root.is_dir():
+            logger.error(f'passed string is not a directory.')
+            exit(1)
 
     return project_root
 
@@ -54,6 +56,10 @@ def list_templates() -> List[str]:
 
     template_list: List[str] = [template_file for template in model_dir.iterdir()
                                 if template_pattern.match(template_file := template.name)]
+
+    if not template_list:
+        logger.error('Not templates to display.')
+        exit(1)
     return template_list
 
 # TODO: Tidy this file.

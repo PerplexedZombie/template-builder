@@ -6,20 +6,26 @@ path = '/mnt/c/Users/zkddu/OneDrive/Documents'
 
 [file_settings]
 # string
-file_name = ""
+file_name = "WrittenByCode.sql"
 
 # string
-template = "bland_template.txt.jinja2"
+template = "sproc_template.sql"
 
 # string
-author = ""
+author = "Terry Dullaghan"
+
+# integer
+error_number = 510
 
 # string
-code_type = ""
-
-# List[string]
-row_list = [""]
+error_blurb = "Not an error really."
 
 # string
-created_on = "2022-09-23"
+db_ref = "Prod"
+
+# string
+description = "Aha"
+
+# string
+commentary = ""
 

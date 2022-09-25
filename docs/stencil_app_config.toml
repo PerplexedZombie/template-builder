@@ -1,0 +1,5 @@
+[app_settings]
+# Where to store log files.
+logging_path = '/home/tmd/.log_files/'
+# Where you want the file to be saved to.
+path = '/mnt/c/Users/zkddu/OneDrive/Documents'

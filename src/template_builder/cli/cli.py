@@ -79,7 +79,7 @@ def another():
     print(f'{txt}')
 
 
-@cli_app.command('build')
+@cli_app.command('print')
 def smith_template():
     build()
 
