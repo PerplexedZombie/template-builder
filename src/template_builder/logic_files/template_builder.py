@@ -2,7 +2,7 @@ from pathlib import Path
 from pathlib import PureWindowsPath
 from re import Pattern
 from re import compile
-from sys import platform
+from platform import system
 from typing import Dict
 from typing import List
 from typing import Union
@@ -59,8 +59,8 @@ class TemplateBuilder:
         Adds attribute self.clean_path to instance.
         """
         win_path_regex: Pattern = compile(r'^[A-Z]:\\{1,2}.+')
-
-        if platform == 'linux' and win_path_regex.match(self.provided_path):
+        plt: str = system()
+        if plt == 'Linux' and win_path_regex.match(self.provided_path):
             logger.info('Looks like you\'re using WSL, will need to fix this..')
             self.provided_path = self._fix_wsl_issue(self.provided_path)
 

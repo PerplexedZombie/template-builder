@@ -11,6 +11,7 @@ from typing import Optional
 from typing import Union
 
 from loguru import logger
+from src.template_builder.logic_files.logger import show_debug
 
 
 # This seems unnecessary, but I've done it. Find the project dir from anywhere...
@@ -27,7 +28,7 @@ def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
 
         if project_root is None:
             logger.error('Cannot find dir path... Maybe pass a path ref?')
-            logger.debug(f'{path=}')
+            show_debug(True, f'{path=}')
             exit(1)
 
     elif isinstance(dir_str, str):
@@ -39,9 +40,18 @@ def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
     return project_root
 
 
-def get_proj_conf_file() -> Path:
+def get_proj_conf_file(file: str = 'file') -> Path:
+    doc: str = ''
+    if file not in ('file', 'app'):
+        logger.error(f'Only accepts "file" or "app" for their respective settings.')
+        exit(1)
+    if file == 'file':
+        doc = 'docs/cache_config.toml'
+    elif file == 'app':
+        doc = 'docs/stencil_app_config.toml'
+
     proj: Path = get_global_project_file_ref()
-    conf: Path = proj.joinpath('docs/cache_config.toml')
+    conf: Path = proj.joinpath(doc)
 
     return conf
 
@@ -50,7 +60,7 @@ def get_proj_conf_file() -> Path:
 def list_templates() -> List[str]:
     proj: Path = get_global_project_file_ref()
     model_dir: Path = proj.joinpath('src/templates/')
-    # logger.debug(f'{model_dir.is_dir()=}')
+    show_debug(True, f'{model_dir.is_dir()=}')
 
     template_pattern: Pattern = compile(r'.+(?:_template)')
 

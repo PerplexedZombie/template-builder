@@ -9,39 +9,35 @@ from loguru import logger
 from tomlkit import TOMLDocument
 from tomlkit import load
 
-from src.template_builder.logic_files.logger import setup_logger
 from src.template_builder.logic_files.project_dirs import get_global_project_file_ref
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.template_builder import TemplateBuilder
-from src.template_builder.models._app_model import AppModel
 from src.template_builder.models.builder_config_base import BuilderConfigBase
+from src.template_builder import app_conf
+from src.template_builder.logic_files.logger import show_debug
 
 
-def _setup() -> AppModel:
+def _setup() -> Dict[str, Any]:
     _project_dir: Path = get_global_project_file_ref()
 
     conf_file: Path = get_proj_conf_file()
     with conf_file.open(mode='r') as file:
         toml_config: TOMLDocument = load(file)
 
-    app_settings: Dict[str, str] = toml_config['app_settings']
-    file_settings: Dict[Any] = toml_config['file_settings']
+    file_settings: Dict[str, Any] = toml_config['file_settings']
+    cache_app_conf: Dict[str, Any] = toml_config['app_settings']
 
-    # Mypy OP. Guido pls nerf.
-    _log_path_str: str = str(app_settings['logging_path'])
-    assert isinstance(_log_path_str, str)
+    cache_app_overrides: Dict[str, Any] = {overridden: new_val
+                                           for overridden, new_val
+                                           in cache_app_conf.items()
+                                           if new_val != ''}
 
-    _log_path: Path = Path(_log_path_str)
-    setup_logger(_log_path)
-    logger.trace('Logger initialized.')
-    logger.debug(f'{app_settings=}')
-    logger.debug(f'{file_settings=}')
+    app_conf.__dict__.update(cache_app_overrides)
 
-    logger.info('Building App model.')
-    app: AppModel = AppModel(project_dir=_project_dir, file_settings=file_settings, **app_settings)
-    logger.success('Built App model.')
+    show_debug(app_conf.debug, f'{app_conf=}')
+    show_debug(app_conf.debug, f'{file_settings=}')
 
-    return app
+    return file_settings
 
 
 def _module_to_classname(name_str: str) -> Tuple[str, str]:
@@ -85,18 +81,18 @@ def _get_schema_from_model(model: BuilderConfigBase) -> List[Tuple[str, str, Any
 
 
 def build() -> None:
-    app: AppModel = _setup()
+    file_settings: Dict[str, Any] = _setup()
 
     logger.info('Marking blueprints')
-    blueprint: BuilderConfigBase = _get_model(app.file_settings['template'])
+    blueprint: BuilderConfigBase = _get_model(file_settings['template'])
     logger.success('Blueprints marked.')
-    # logger.debug(f'{model=})')
+    show_debug(app_conf.debug, f'{blueprint=})')
     logger.info('Building model')
-    model = blueprint(**app.file_settings)
+    model = blueprint(**file_settings)
     logger.success('Built model.')
 
     # Write my file - save ~7 minutes.
-    builder: TemplateBuilder = TemplateBuilder(model, app.path)
+    builder: TemplateBuilder = TemplateBuilder(model, app_conf.path)
     builder.build_file()
 
 # TODO: Add error handling?

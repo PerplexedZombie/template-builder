@@ -16,10 +16,16 @@ from src.template_builder.logic_files.build_file import _get_model
 from src.template_builder.logic_files.build_file import _get_schema_from_model
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 
+from src.template_builder import app_conf
+from loguru import logger
+from src.template_builder.logic_files.logger import show_debug
+
 
 def _update_cache_config(header: str, data: Dict[str, Any]) -> None:
     config_path: Path = get_proj_conf_file()
-    # logger.debug(f'{config_path=}')
+
+    show_debug(app_conf.debug, f'{config_path=}')
+
     with config_path.open('r') as file:
         config: TOMLDocument = load(file)
 
@@ -40,7 +46,7 @@ def _add_to_cache_config(table_name: str, table_: Table) -> None:
 
 def _reset_cache_config() -> None:
     config_path: Path = get_proj_conf_file()
-    # logger.debug(f'{config_path=}')
+    show_debug(app_conf.debug, f'{config_path=}')
     with config_path.open('r') as file:
         config: TOMLDocument = load(file)
 
@@ -79,6 +85,6 @@ def _populate_model_fields(model_name: str) -> Table:
             file_settings.add(key_, _correct_default_val(type_))
         file_settings.add(nl())
 
-    # logger.debug(f'{blueprints=}')
+    show_debug(app_conf.debug, f'{blueprints=}')
 
     return file_settings

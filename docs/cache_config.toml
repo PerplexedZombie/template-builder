@@ -1,30 +1,35 @@
+# Set these to override the default settings from stencil_app_config.
+# Otherwise leave blank to use stencil_app_config.
 [app_settings]
 # Where to store log files.
-logging_path = '/home/tmd/.log_files/'
+logging_path = ""
 # Where you want the file to be saved to.
-path = '/mnt/c/Users/zkddu/OneDrive/Documents'
+path = ""
+# Show dubugging log calls.
+# Replace as non-quoted lowercase bool (eg. true, not "true" or True).
+debug = ""
 
 [file_settings]
 # string
-file_name = "WrittenByCode.sql"
+file_name = ""
 
 # string
 template = "sproc_template.sql"
 
 # string
-author = "Terry Dullaghan"
+author = ""
 
 # integer
-error_number = 510
+error_number = 0
 
 # string
-error_blurb = "Not an error really."
+error_blurb = ""
 
 # string
-db_ref = "Prod"
+db_ref = ""
 
 # string
-description = "Aha"
+description = ""
 
 # string
 commentary = ""

@@ -7,4 +7,4 @@ class AppModel(BaseModel):
     project_dir: Path
     logging_path: Path
     path: str
-    file_settings: Dict[str, Any]
+    debug: bool = False
