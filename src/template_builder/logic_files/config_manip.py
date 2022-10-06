@@ -10,7 +10,7 @@ from tomlkit import dump
 from tomlkit import load
 from tomlkit import nl
 from tomlkit import table
-from tomlkit.items import Table
+from tomlkit.items import Table as tomlTable
 
 from src.template_builder.logic_files.build_file import _get_model
 from src.template_builder.logic_files.build_file import _get_schema_from_model
@@ -34,7 +34,7 @@ def _update_cache_config(header: str, data: Dict[str, Any]) -> None:
         dump(config, file)
 
 
-def _add_to_cache_config(table_name: str, table_: Table) -> None:
+def _add_to_cache_config(table_name: str, table_: tomlTable) -> None:
     config_path: Path = get_proj_conf_file()
     with config_path.open('r') as file:
         config: TOMLDocument = load(file)
@@ -67,14 +67,14 @@ def _correct_default_val(value_type: str):
         return 0
 
 
-def _populate_model_fields(model_name: str) -> Table:
+def _populate_model_fields(model_name: str) -> tomlTable:
     blueprints: List[Tuple[str, str, Any]] = _get_schema_from_model(_get_model(model_name))
 
     key_: str
     type_: str
     val_: Any
 
-    file_settings: Table = table()
+    file_settings: tomlTable = table()
 
     for meta_info in blueprints:
         key_, type_, val_ = meta_info

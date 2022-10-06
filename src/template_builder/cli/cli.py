@@ -5,8 +5,10 @@ from typing import List
 from pathlib import Path
 
 from rich import print
+from rich.console import Console
+from rich.table import Table as richTable
 from rich.prompt import Prompt
-from tomlkit.items import Table
+from tomlkit.items import Table as tomlTable
 from typer import Typer
 from typer import Exit
 
@@ -22,12 +24,14 @@ from src.template_builder.logic_files.project_dirs import list_templates
 from src.template_builder.logic_files.build_file import build
 
 cli_app: Typer = Typer()
+console: Console = Console()
 
 
 def _invalid_action(ref: int) -> str:
     errors: Dict[int, str] = {
         1: red('That is not an option'),
-        2: red('Not implemented.')
+        2: red('Not implemented.'),
+        3: '[cornflower_blue]No model set, stopping app.[/cornflower_blue]'
     }
 
     return errors[ref]
@@ -44,10 +48,15 @@ def choose_model():
     """
     models: List[str] = list_templates()
 
-    # TODO: Make this a Rich table?
     show_debug(app_conf.debug, f'{models=}')
+    model_display: richTable = richTable(show_footer=True, footer_style='cornflower_blue')
+
+    model_display.add_column('ID', 'q', justify='right', style='bright_cyan', header_style='bright_cyan')
+    model_display.add_column('Model', 'Quit', justify='center', style='white')
+
     for index, model in enumerate(models, start=1):
-        print(f'{str(index)}. {model}')
+        model_display.add_row(str(index), model)
+    console.print(model_display)
 
     name_str: str = '[white]name[/white]'
     number_str: str = '[bright_cyan]number[/bright_cyan]'
@@ -58,7 +67,10 @@ def choose_model():
             ('[cornflower_blue]Please select a model by [/cornflower_blue]'
              f'{number_str} [cornflower_blue]or[/cornflower_blue] {name_str}'))
 
-        if resp.isnumeric():
+        if resp == 'q':
+            print(_invalid_action(3))
+            raise Exit()
+        elif resp.isnumeric():
             resp_i: int = int(resp)
             if resp_i == 0:
                 print(_invalid_action(1))
@@ -74,7 +86,7 @@ def choose_model():
         else:
             print(_invalid_action(1))
 
-    file_settings: Table = _populate_model_fields(selection)
+    file_settings: tomlTable = _populate_model_fields(selection)
     _reset_cache_config()
     _add_to_cache_config('file_settings', file_settings)
     _update_cache_config('file_settings', {'template': selection})
@@ -109,24 +121,12 @@ def update_config():
     Change app settings.
     """
 
-    # TODO: Break into function to find app.
-    # path_to_exe: str = ''
-    # find_path: Path = Path()
-    # trials: List[str] = ['/mnt/c/Program Files', 'C:/Program Files', '/home']
-    # for path_ in trials:
-    #     find_path = Path(path_)
-    #     if find_path.is_dir():
-    #         break
-    #     continue
-    #
-
     try:
-        sp.run(['/mnt/c/Program Files/Notepad++/notepad++.exe',
-                get_proj_conf_file('app').as_posix()])
+        sp.run(('open', get_proj_conf_file('app').as_posix()))
     except FileNotFoundError:
         print(_invalid_action(2))
         print(red("D'oh, I haven't added functionality for this yet.."))
-        Exit(1)
+        raise Exit(1)
 
 # TODO: Move certain logic out of cli?
 # TODO: Accept something other than notepad++..?

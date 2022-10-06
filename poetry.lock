@@ -212,7 +212,7 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xm
 
 [[package]]
 name = "rich"
-version = "12.5.1"
+version = "12.6.0"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 category = "main"
 optional = false
@@ -300,7 +300,7 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "97dd9251579f8dff74ce975d4b4b9333bed6db457836899b8ff7912b6ddfda82"
+content-hash = "979d0e5ef40669e37492f23440e640923bd4681eec52b3a4ded469d3ebb441d9"
 
 [metadata.files]
 atomicwrites = []
