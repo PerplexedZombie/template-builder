@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "template-builder"
-version = "0.0.5"
+version = "0.0.6"
 description = ""
 authors = ["Terry Dullaghan <t.ma.dullaghan@gmail.com>"]
 packages = [

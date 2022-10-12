@@ -1,8 +1,7 @@
 import os.path
 from os import PathLike
+import platform
 from pathlib import Path
-from re import Pattern
-from re import compile
 from sys import exit
 from sys import path
 from typing import Generator
@@ -18,13 +17,18 @@ from src.template_builder.logic_files.logger import show_debug
 def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
     project_root: Optional[Path] = None
     if dir_str is None:
-        # Dumb hack:
-        paths: Generator[Path] = (Path(path_row) for path_row in path)
-        for i in paths:
-            if i.name != 'template-builder':
-                continue
-            if i.name == 'template-builder':
-                project_root = Path(os.path.realpath(i))
+        # Equally dumb hack...
+        file_path: Path = Path(os.path.abspath(__file__)).parent
+
+        attempts: int = 0
+
+        while attempts < 5:
+            if file_path.name != 'src':
+                file_path = file_path.parent
+                attempts += 1
+            if file_path.name == 'src':
+                project_root = file_path
+                break
 
         if project_root is None:
             logger.error('Cannot find dir path... Maybe pass a path ref?')
@@ -41,35 +45,21 @@ def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
 
 
 def get_proj_conf_file(file: str = 'file') -> Path:
-    doc: str = ''
+    conf: Path = Path.home().joinpath('.config/stencil_app/')
     if file not in ('file', 'app'):
         logger.error(f'Only accepts "file" or "app" for their respective settings.')
         exit(1)
     if file == 'file':
-        doc = 'docs/cache_config.toml'
+        conf = conf.joinpath('cache_config.toml')
     elif file == 'app':
-        doc = 'docs/stencil_app_config.toml'
-
-    proj: Path = get_global_project_file_ref()
-    conf: Path = proj.joinpath(doc)
+        conf = conf.joinpath('stencil_app_config.toml')
 
     return conf
 
 
-# Should this function live here?
-def list_templates() -> List[str]:
-    proj: Path = get_global_project_file_ref()
-    model_dir: Path = proj.joinpath('src/templates/')
-    show_debug(True, f'{model_dir.is_dir()=}')
 
-    template_pattern: Pattern = compile(r'.+(?:_template)')
 
-    template_list: List[str] = [template_file for template in model_dir.iterdir()
-                                if template_pattern.match(template_file := template.name)]
 
-    if not template_list:
-        logger.error('Not templates to display.')
-        exit(1)
-    return template_list
+
 
 # TODO: Tidy this file.

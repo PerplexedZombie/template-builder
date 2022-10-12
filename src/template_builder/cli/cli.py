@@ -20,7 +20,7 @@ from src.template_builder.logic_files.config_manip import _populate_model_fields
 from src.template_builder.logic_files.config_manip import _reset_cache_config
 from src.template_builder.logic_files.config_manip import _update_cache_config
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
-from src.template_builder.logic_files.project_dirs import list_templates
+from src.template_builder.logic_files.build_file import list_templates
 from src.template_builder.logic_files.build_file import build
 
 cli_app: Typer = Typer()
@@ -68,6 +68,7 @@ def choose_model():
              f'{number_str} [cornflower_blue]or[/cornflower_blue] {name_str}'))
 
         if resp == 'q':
+            # TODO: Something about this...
             print(_invalid_action(3))
             raise Exit()
         elif resp.isnumeric():
@@ -86,11 +87,17 @@ def choose_model():
         else:
             print(_invalid_action(1))
 
-    file_settings: tomlTable = _populate_model_fields(selection)
-    _reset_cache_config()
-    _add_to_cache_config('file_settings', file_settings)
-    _update_cache_config('file_settings', {'template': selection})
-    print(f'[green]Thank you for picking {selection}![/green]')
+    print(f'{selection=}')
+    print(f'{app_conf.current_config=}')
+    if selection != app_conf.current_config:
+        file_settings: tomlTable = _populate_model_fields(selection)
+        _reset_cache_config()
+        _add_to_cache_config('file_settings', file_settings)
+        _update_cache_config('file', 'file_settings', {'template': selection})
+        print(f'[green]Thank you for picking {selection}![/green]')
+        app_conf.current_config = selection
+        _update_cache_config('app', 'cached_info', {'current_config': selection})
+
     sp.run(['/mnt/c/Program Files/Notepad++/notepad++.exe', get_proj_conf_file().as_posix()])
     print(f'[green]config file has been updated accordingly.[/green]')
 

@@ -14,23 +14,6 @@ debug = ""
 file_name = ""
 
 # string
-template = "sproc_template.sql"
+template = ""
 
-# string
-author = ""
-
-# integer
-error_number = 0
-
-# string
-error_blurb = ""
-
-# string
-db_ref = ""
-
-# string
-description = ""
-
-# string
-commentary = ""
 

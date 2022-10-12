@@ -1,9 +1,11 @@
 [app_settings]
 # Where to store log files.
-logging_path = '/home/tmd/.log_files/'
+logging_path = ''
 
 # Where you want the file to be saved to.
-path = '/mnt/c/Users/zkddu/OneDrive/Documents'
+path = ''
 
 # Show dubugging log calls.
 debug = false
+
+[cached_info]

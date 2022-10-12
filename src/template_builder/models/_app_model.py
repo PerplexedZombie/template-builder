@@ -8,3 +8,4 @@ class AppModel(BaseModel):
     logging_path: Path
     path: str
     debug: bool = False
+    current_config: str = ''

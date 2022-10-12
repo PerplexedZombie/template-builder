@@ -4,21 +4,23 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Tuple
+from typing import Callable
+from re import Pattern
+from re import compile
 
 from loguru import logger
 from tomlkit import TOMLDocument
 from tomlkit import load
 
-from src.template_builder.logic_files.project_dirs import get_global_project_file_ref
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.template_builder import TemplateBuilder
 from src.template_builder.models.builder_config_base import BuilderConfigBase
 from src.template_builder import app_conf
+from src.template_builder import project_dir_
 from src.template_builder.logic_files.logger import show_debug
 
 
 def _setup() -> Dict[str, Any]:
-    _project_dir: Path = get_global_project_file_ref()
 
     conf_file: Path = get_proj_conf_file()
     with conf_file.open(mode='r') as file:
@@ -40,6 +42,22 @@ def _setup() -> Dict[str, Any]:
     return file_settings
 
 
+def list_templates() -> List[str]:
+    proj: Path = project_dir_
+    model_dir: Path = proj.joinpath('templates/')
+    show_debug(True, f'{model_dir.is_dir()=}')
+
+    template_pattern: Pattern = compile(r'.+(?:_template)')
+
+    template_list: List[str] = [template.name for template in model_dir.iterdir()
+                                if template_pattern.match(template.name)]
+
+    if not template_list:
+        logger.error('Not templates to display.')
+        exit(1)
+    return template_list
+
+
 def _module_to_classname(name_str: str) -> Tuple[str, str]:
     file_name: str = name_str.split('.')[0]
 
@@ -49,18 +67,19 @@ def _module_to_classname(name_str: str) -> Tuple[str, str]:
     return file_name, class_name
 
 
-def _get_model(template_name: str) -> BuilderConfigBase:
+def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBase]:
     file_: str
     class_: str
     file_, class_ = _module_to_classname(template_name)
 
     module = importlib.import_module(f'src.template_builder.models.{file_}', class_)
 
-    loaded_class: BuilderConfigBase = getattr(module, class_)
+    loaded_class: Callable[[Dict[str, Any]], BuilderConfigBase] = getattr(module, class_)
+    show_debug(app_conf.debug, f'getattr returns: {type(loaded_class)}')
     return loaded_class
 
 
-def _get_schema_from_model(model: BuilderConfigBase) -> List[Tuple[str, str, Any]]:
+def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tuple[str, str, Any]]:
     model_props = model.schema()['properties']
 
     fields: List[Tuple[str, str, Any]] = []
@@ -84,11 +103,11 @@ def build() -> None:
     file_settings: Dict[str, Any] = _setup()
 
     logger.info('Marking blueprints')
-    blueprint: BuilderConfigBase = _get_model(file_settings['template'])
+    blueprint: Callable[[Dict[str, Any]], BuilderConfigBase] = _get_model(file_settings['template'])
     logger.success('Blueprints marked.')
     show_debug(app_conf.debug, f'{blueprint=})')
     logger.info('Building model')
-    model = blueprint(**file_settings)
+    model: BuilderConfigBase = blueprint(**file_settings)
     logger.success('Built model.')
 
     # Write my file - save ~7 minutes.
