@@ -4,6 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Callable
+from typing import Optional
 
 from tomlkit import TOMLDocument
 from tomlkit import comment
@@ -20,15 +21,15 @@ from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 
 from src.template_builder.models.builder_config_base import BuilderConfigBase
 
+from src.template_builder import toml_literal_string
 from src.template_builder import app_conf
 from loguru import logger
-from src.template_builder.logic_files.logger import show_debug
 
 
-def _update_cache_config(file: str, header: str, data: Dict[str, Any]) -> None:
+def _update_config(file: str, header: str, data: Dict[str, Any]) -> None:
     config_path: Path = get_proj_conf_file(file)
 
-    show_debug(app_conf.debug, f'{config_path=}')
+    logger.debug(f'{config_path=}')
 
     with config_path.open('r') as file:
         config: TOMLDocument = load(file)
@@ -50,7 +51,7 @@ def _add_to_cache_config(table_name: str, table_: tomlTable) -> None:
 
 def _reset_cache_config() -> None:
     config_path: Path = get_proj_conf_file()
-    show_debug(app_conf.debug, f'{config_path=}')
+    logger.debug(f'{config_path=}')
     with config_path.open('r') as file:
         config: TOMLDocument = load(file)
 
@@ -90,8 +91,36 @@ def _populate_model_fields(model_name: str) -> tomlTable:
             file_settings.add(key_, _correct_default_val(type_))
         file_settings.add(nl())
 
-    show_debug(app_conf.debug, f'{blueprints=}')
+    logger.debug(f'{blueprints=}')
 
     return file_settings
 
-# TODO: change how we read strings from toml
+
+# TODO: Clean this up, actually sort out how to handle it.
+def config_editor_switch(editor: Optional[str] = None) -> str:
+    if editor:
+        return editor
+
+    if app_conf.using_wsl:
+        return find_editor('Windows', True)
+    else:
+        return find_editor('Windows')
+
+
+def find_editor(platform_os: str, wsl: bool = False) -> str:
+    path_to_app: Path
+    editor_loc: Path
+
+    if wsl and platform_os == 'Windows':
+        path_to_app = Path('/mnt/c/')
+    else:
+        path_to_app: Path = Path(Path().home().anchor)
+
+    if (editor_loc := path_to_app.joinpath('Program Files/Notepad++/notepad++.exe')).exists():
+        return editor_loc.as_posix()
+
+    elif (notepad := path_to_app.joinpath('WINDOWS/system32/notepad.exe')).exists():
+        return notepad.as_posix()
+
+    else:
+        return 'vim'

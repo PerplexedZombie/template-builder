@@ -3,25 +3,29 @@ import subprocess as sp
 from typing import Dict
 from typing import List
 from pathlib import Path
+from loguru import logger
 
 from rich import print
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table as richTable
 from rich.prompt import Prompt
 from tomlkit.items import Table as tomlTable
 from typer import Typer
 from typer import Exit
+from typer import Option
 
 from src.template_builder import app_conf
-from src.template_builder.logic_files.logger import show_debug
 
 from src.template_builder.logic_files.config_manip import _add_to_cache_config
 from src.template_builder.logic_files.config_manip import _populate_model_fields
 from src.template_builder.logic_files.config_manip import _reset_cache_config
-from src.template_builder.logic_files.config_manip import _update_cache_config
+from src.template_builder.logic_files.config_manip import _update_config
+from src.template_builder.logic_files.config_manip import config_editor_switch
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.build_file import list_templates
 from src.template_builder.logic_files.build_file import build
+from src.template_builder.logic_files.build_file import compile_template
 
 cli_app: Typer = Typer()
 console: Console = Console()
@@ -41,14 +45,28 @@ def red(txt: str) -> str:
     return f'[red]{txt}[/red]'
 
 
+def use_editor() -> str:
+    if app_conf.editor == '':
+        found_editor: str = config_editor_switch()
+        logger.debug(f'{found_editor=}')
+
+        _update_config('app', 'app_settings', {'editor': found_editor})
+        app_conf.editor = found_editor
+        return found_editor
+
+    else:
+        return app_conf.editor
+
+
 @cli_app.command('set-model')
-def choose_model():
+def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print function after setting model.'),
+                 compile_: bool = Option(False, '--compile', '-c', help='Run compile function after setting model')):
     """
     Select a model, and update the attributes to be printed in.
     """
     models: List[str] = list_templates()
 
-    show_debug(app_conf.debug, f'{models=}')
+    logger.debug(f'{models=}')
     model_display: richTable = richTable(show_footer=True, footer_style='cornflower_blue')
 
     model_display.add_column('ID', 'q', justify='right', style='bright_cyan', header_style='bright_cyan')
@@ -89,17 +107,25 @@ def choose_model():
 
     print(f'{selection=}')
     print(f'{app_conf.current_config=}')
+
     if selection != app_conf.current_config:
         file_settings: tomlTable = _populate_model_fields(selection)
         _reset_cache_config()
         _add_to_cache_config('file_settings', file_settings)
-        _update_cache_config('file', 'file_settings', {'template': selection})
+        _update_config('file', 'file_settings', {'template': selection})
         print(f'[green]Thank you for picking {selection}![/green]')
         app_conf.current_config = selection
-        _update_cache_config('app', 'cached_info', {'current_config': selection})
+        _update_config('app', 'cached_info', {'current_config': selection})
 
-    sp.run(['/mnt/c/Program Files/Notepad++/notepad++.exe', get_proj_conf_file().as_posix()])
+    sp.run((use_editor(), get_proj_conf_file().as_posix()))
     print(f'[green]config file has been updated accordingly.[/green]')
+
+    if compile_:
+        review_template()
+
+    if build_:
+        build()
+
 
 
 @cli_app.command('option2')
@@ -122,18 +148,49 @@ def smith_template():
     build()
 
 
+@cli_app.command('compile')
+def review_template():
+    """
+    Show in terminal anticipated output from template with configured parameters.
+    """
+    render: str = compile_template()
+    rendered_str: Panel = Panel(render, expand=False, border_style='blue')
+
+    console.print(rendered_str)
+
+
 @cli_app.command('settings')
-def update_config():
+def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This options sets "using_wsl" to True, '
+                                                                      'before checking editors.')),
+                  show: bool = Option(False, '--existing', '-e', help=('Display current settings before '
+                                                                       'instead of opening an editor'))):
     """
     Change app settings.
     """
 
-    try:
-        sp.run(('open', get_proj_conf_file('app').as_posix()))
-    except FileNotFoundError:
-        print(_invalid_action(2))
-        print(red("D'oh, I haven't added functionality for this yet.."))
-        raise Exit(1)
+    if tick_wsl:
+        _update_config('app', 'app_settings', {'using_wsl': True})
+        app_conf.using_wsl = True
+
+    if show:
+        cur_settings: str = ''
+
+        just_val: int = len(max(app_conf.dict(exclude_none=True).keys(), key=len)) + 1
+        logger.debug(f'{max(app_conf.dict(exclude_none=True).keys(), key=len)=}')
+
+        for k, v in app_conf.dict(exclude_none=True).items():
+            cur_settings += (f'{k}:'.rjust(just_val) +
+                             f'\t{v}')
+            cur_settings += '\n'
+        settings_info: Panel = Panel(cur_settings[:-1], title='App settings')
+        console.print(settings_info)
+
+    else:
+        try:
+            sp.run((use_editor(), get_proj_conf_file('app').as_posix()))
+        except FileNotFoundError:
+            print(_invalid_action(2))
+            print(red("D\'oh, I haven\'t added functionality for this yet.."))
+            raise Exit(1)
 
 # TODO: Move certain logic out of cli?
-# TODO: Accept something other than notepad++..?

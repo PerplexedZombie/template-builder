@@ -17,7 +17,6 @@ from src.template_builder.logic_files.template_builder import TemplateBuilder
 from src.template_builder.models.builder_config_base import BuilderConfigBase
 from src.template_builder import app_conf
 from src.template_builder import project_dir_
-from src.template_builder.logic_files.logger import show_debug
 
 
 def _setup() -> Dict[str, Any]:
@@ -36,8 +35,8 @@ def _setup() -> Dict[str, Any]:
 
     app_conf.__dict__.update(cache_app_overrides)
 
-    show_debug(app_conf.debug, f'{app_conf=}')
-    show_debug(app_conf.debug, f'{file_settings=}')
+    logger.debug(f'{app_conf=}')
+    logger.debug(f'{file_settings=}')
 
     return file_settings
 
@@ -45,7 +44,7 @@ def _setup() -> Dict[str, Any]:
 def list_templates() -> List[str]:
     proj: Path = project_dir_
     model_dir: Path = proj.joinpath('templates/')
-    show_debug(True, f'{model_dir.is_dir()=}')
+    logger.debug(f'{model_dir.is_dir()=}')
 
     template_pattern: Pattern = compile(r'.+(?:_template)')
 
@@ -75,7 +74,7 @@ def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBa
     module = importlib.import_module(f'src.template_builder.models.{file_}', class_)
 
     loaded_class: Callable[[Dict[str, Any]], BuilderConfigBase] = getattr(module, class_)
-    show_debug(app_conf.debug, f'getattr returns: {type(loaded_class)}')
+    logger.debug(f'getattr returns: {type(loaded_class)}')
     return loaded_class
 
 
@@ -99,20 +98,33 @@ def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tupl
     return fields
 
 
-def build() -> None:
+def _get_builder() -> TemplateBuilder:
     file_settings: Dict[str, Any] = _setup()
 
     logger.info('Marking blueprints')
     blueprint: Callable[[Dict[str, Any]], BuilderConfigBase] = _get_model(file_settings['template'])
     logger.success('Blueprints marked.')
-    show_debug(app_conf.debug, f'{blueprint=})')
+    logger.debug(f'{blueprint=})')
     logger.info('Building model')
     model: BuilderConfigBase = blueprint(**file_settings)
     logger.success('Built model.')
 
-    # Write my file - save ~7 minutes.
     builder: TemplateBuilder = TemplateBuilder(model, app_conf.path)
+
+    return builder
+
+
+def build() -> None:
+    file_settings: Dict[str, Any] = _setup()
+
+    builder = _get_builder()
     builder.build_file()
+
+
+def compile_template() -> str:
+    builder = _get_builder()
+
+    return builder.content
 
 # TODO: Add error handling?
 # TODO: Reverse a Jinja template..?

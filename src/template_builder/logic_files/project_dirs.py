@@ -10,7 +10,6 @@ from typing import Optional
 from typing import Union
 
 from loguru import logger
-from src.template_builder.logic_files.logger import show_debug
 
 
 # This seems unnecessary, but I've done it. Find the project dir from anywhere...
@@ -32,7 +31,7 @@ def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
 
         if project_root is None:
             logger.error('Cannot find dir path... Maybe pass a path ref?')
-            show_debug(True, f'{path=}')
+            logger.debug(f'{path=}')
             exit(1)
 
     elif isinstance(dir_str, str):

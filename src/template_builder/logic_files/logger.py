@@ -16,8 +16,3 @@ def setup_logger(log_path: Path):
     logger.add(sys.stderr, level='INFO')
     logger.add(log_file, level='TRACE')
 
-
-# Tempted to remove this...
-def show_debug(show: bool, msg: str) -> None:
-    if show:
-        logger.debug(msg)

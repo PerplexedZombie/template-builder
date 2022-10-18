@@ -7,5 +7,6 @@ class AppModel(BaseModel):
     project_dir: Path
     logging_path: Path
     path: str
-    debug: bool = False
+    editor: str
     current_config: str = ''
+    using_wsl: bool = False
