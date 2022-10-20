@@ -14,9 +14,14 @@ from tomlkit import nl
 from tomlkit import string as tomlString
 from tomlkit.items import Table as tomlTable
 from typing import Optional
+from typing import List
 
 
-__version__ = '0.0.6'
+__version__: str = '0.0.6'
+
+__app_doc_version__: str = '0.0.2'
+
+__cache_doc_version__: str = '0.0.2'
 
 project_dir_: Path = get_global_project_file_ref()
 
@@ -32,6 +37,16 @@ def toml_literal_string(s: Optional[str] = None) -> str:
 
 def _make_app_settings() -> tomlTable:
     app_settings: tomlTable = table()
+
+    app_settings.add(nl())
+    app_settings.add(comment(' App version.'))
+    app_settings.add('app_version', __version__)
+    app_settings.add(nl())
+
+    app_settings.add(nl())
+    app_settings.add(comment(' Document version.'))
+    app_settings.add('doc_version', __app_doc_version__)
+    app_settings.add(nl())
 
     app_settings.add(nl())
     app_settings.add(comment(' Where to store log files.'))
@@ -80,11 +95,16 @@ def _make_stencil_app_config() -> document:
 
 
 def _make_cache_config() -> document:
+    OVERRIDES: List[str] = ['logging_path', 'path', 'editor']
+
     doc: document = document()
     doc.add(comment(' Set these to override settings from stencil_app_config for this instance.'))
     doc.add(comment(' Otherwise leave blank to use stencil_app_config.'))
 
     app_settings: tomlTable = _make_app_settings()
+    for i in app_settings.keys():
+        if i not in OVERRIDES:
+            app_settings.remove(i)
     doc.add('app_settings', app_settings)
     doc.add(nl())
 
@@ -98,6 +118,36 @@ def _make_cache_config() -> document:
     doc.add('file_settings', file_settings)
 
     return doc
+
+
+def write_new_conf_file(path: Path, conf_foc: TOMLDocument):
+    with path.open('w') as scribe:
+        dump(conf_foc, scribe)
+
+
+# Wow. This is awful.
+def resolve_version_dif(src_ver: str, read_ver: str) -> int:
+    src_maj: int
+    src_min: int
+    src_pat: int
+    read_maj: int
+    read_min: int
+    read_pat: int
+    logger.trace(f'{src_ver=}')
+    logger.trace(f'{read_ver=}')
+    src: List[int] = [int(i) for i in src_ver.split('.')]
+    read: List[int] = [int(i) for i in read_ver.split('.')]
+    src_maj, src_min, src_pat = src
+    read_maj, read_min, read_pat = read
+
+    if src_maj > read_maj:
+        return 1
+    elif src_min > read_min and src_maj == read_maj:
+        return 1
+    elif src_pat > read_pat and src_min == read_min and src_maj == read_maj:
+        return 1
+    else:
+        return -1
 
 
 def ensure_config_files_exist() -> None:
@@ -118,8 +168,7 @@ def ensure_config_files_exist() -> None:
         else:
             stencil_app_config: document = _make_stencil_app_config()
             mkfile: Path = home.joinpath('stencil_app_config.toml')
-            with mkfile.open('w') as scribe:
-                dump(stencil_app_config, scribe)
+            write_new_conf_file(mkfile, stencil_app_config)
 
         if home.joinpath('cache_config.toml').exists():
             logger.trace('cache_config.toml exists.')
@@ -127,8 +176,7 @@ def ensure_config_files_exist() -> None:
         else:
             cache_config: document = _make_cache_config()
             mkfile: Path = home.joinpath('cache_config.toml')
-            with mkfile.open('w') as scribe:
-                dump(cache_config, scribe)
+            write_new_conf_file(mkfile, cache_config)
         processing = False
 
 

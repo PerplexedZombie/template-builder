@@ -97,6 +97,7 @@ def _populate_model_fields(model_name: str) -> tomlTable:
 
 
 # TODO: Clean this up, actually sort out how to handle it.
+# TODO: Rewrite tests.
 def config_editor_switch(editor: Optional[str] = None) -> str:
     if editor:
         return editor

@@ -1,4 +1,3 @@
-import random
 import subprocess as sp
 from typing import Dict
 from typing import List
@@ -105,8 +104,8 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
         else:
             print(_invalid_action(1))
 
-    print(f'{selection=}')
-    print(f'{app_conf.current_config=}')
+    logger.debug(f'{selection=}')
+    logger.debug(f'{app_conf.current_config=}')
 
     if selection != app_conf.current_config:
         file_settings: tomlTable = _populate_model_fields(selection)
@@ -117,27 +116,16 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
         app_conf.current_config = selection
         _update_config('app', 'cached_info', {'current_config': selection})
 
-    sp.run((use_editor(), get_proj_conf_file().as_posix()))
-    print(f'[green]config file has been updated accordingly.[/green]')
+    complete_ = sp.run((use_editor(), get_proj_conf_file().as_posix()))
 
-    if compile_:
-        review_template()
+    if complete_:
+        print(f'[green]config file has been updated accordingly.[/green]')
 
-    if build_:
-        build()
+        if compile_:
+            review_template()
 
-
-
-@cli_app.command('option2')
-def another():
-    """
-    This is fun!
-    """
-    colours: List[str] = ['red', 'blue', 'green', 'pink', 'amber', 'purple', 'yellow']
-    colour: str = random.choice(colours)
-
-    txt: str = f'[{colour}]This does something![/{colour}]'
-    print(f'{txt}')
+        if build_:
+            build()
 
 
 @cli_app.command('print')
@@ -194,3 +182,4 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
             raise Exit(1)
 
 # TODO: Move certain logic out of cli?
+# TODO: Better format tables.

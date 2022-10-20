@@ -3,6 +3,7 @@ from pydantic import Extra
 
 
 class BuilderConfigBase(BaseModel):
+    doc_version: str
     file_name: str
     template: str
 
