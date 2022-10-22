@@ -1,4 +1,5 @@
 from pathlib import Path
+from platform import system
 from typing import Any
 from typing import Dict
 from typing import List
@@ -21,7 +22,6 @@ from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 
 from src.template_builder.models.builder_config_base import BuilderConfigBase
 
-from src.template_builder import toml_literal_string
 from src.template_builder import app_conf
 from loguru import logger
 
@@ -105,12 +105,16 @@ def config_editor_switch(editor: Optional[str] = None) -> str:
     if app_conf.using_wsl:
         return find_editor('Windows', True)
     else:
-        return find_editor('Windows')
+        return find_editor()
 
 
-def find_editor(platform_os: str, wsl: bool = False) -> str:
+def find_editor(platform_os: Optional[str] = None, wsl: Optional[bool] = False) -> str:
+
     path_to_app: Path
     editor_loc: Path
+
+    if platform_os is None:
+        platform_os = system()
 
     if wsl and platform_os == 'Windows':
         path_to_app = Path('/mnt/c/')
