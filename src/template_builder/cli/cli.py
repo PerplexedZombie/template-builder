@@ -141,8 +141,10 @@ def review_template():
     """
     Show in terminal anticipated output from template with configured parameters.
     """
-    render: str = compile_template()
-    rendered_str: Panel = Panel(render, expand=False, border_style='blue')
+    render: str
+    file_name: str
+    render, file_name = compile_template()
+    rendered_str: Panel = Panel(render, expand=False, border_style='blue', title=file_name)
 
     console.print(rendered_str)
 
@@ -183,3 +185,5 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
 
 # TODO: Move certain logic out of cli?
 # TODO: Better format tables.
+# TODO: Present an option to produce cache file without prompt?
+# TODO: Set up Stencil API?

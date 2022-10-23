@@ -236,6 +236,7 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
             new_ver.update(current)
             new_ver['app_settings']['doc_version'] = doc_version
 
+            # _write_new_conf_file()?
             with conf_path.open('w') as scribe:
                 dump(new_ver, scribe)
             console.print(('[#42C476]Now using stencil_app_config.toml version [/#42C476]'

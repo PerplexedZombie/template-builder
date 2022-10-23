@@ -83,6 +83,7 @@ def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tupl
 
     fields: List[Tuple[str, str, Any]] = []
     update_fields = fields.append
+    # Oh god I need to recurse this...
     for val_name, val_type_ph in model_props.items():
         if (val_type := val_type_ph.get('type')) not in ('array', 'object'):
             update_fields((val_name, val_type, val_type_ph.get('default', '')))
@@ -121,10 +122,10 @@ def build() -> None:
     builder.build_file()
 
 
-def compile_template() -> str:
+def compile_template() -> Tuple[str, str]:
     builder = _get_builder()
 
-    return builder.content
+    return builder.content, builder.content_kwargs['file_name']
 
 # TODO: Add error handling?
 # TODO: Reverse a Jinja template..?
