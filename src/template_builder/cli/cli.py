@@ -176,7 +176,7 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
             cur_settings += (f'{k}:'.rjust(just_val) +
                              f'\t{v}')
             cur_settings += '\n'
-        settings_info: Panel = Panel(cur_settings[:-1], title='App settings')
+        settings_info: Panel = Panel(cur_settings[:-1], title='App settings', title_align='left')
         console.print(settings_info)
 
     else:
@@ -189,5 +189,4 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
 
 # TODO: Move certain logic out of cli?
 # TODO: Better format tables.
-# TODO: Present an option to produce cache file without prompt?
 # TODO: Set up Stencil API?

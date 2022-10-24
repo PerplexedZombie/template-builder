@@ -117,7 +117,6 @@ def _populate_model_fields(model_name: str) -> tomlTable:
 # TODO: Clean this up, actually sort out how to handle it.
 # TODO: Add more editors?
 # TODO: Add more path options?
-# TODO: Something about working on Macs?
 # TODO: Rewrite tests.
 def config_editor_switch(editor: Optional[str] = None) -> str:
     if editor:
@@ -147,6 +146,12 @@ def find_editor(platform_os: Optional[str] = None, wsl: Optional[bool] = False) 
 
     elif (notepad := path_to_app.joinpath('WINDOWS/system32/notepad.exe')).exists():
         return notepad.as_posix()
+
+    elif (mac_notepad := path_to_app.joinpath('/Applications/Notepad.app/Contents/MacOS/Notepad')).exists():
+        return mac_notepad.as_posix()
+
+    elif (textedit := path_to_app.joinpath('/Applications/TextEdit.app/Contents/MacOS/TextEdit')).exists():
+        return textedit.as_posix()
 
     else:
         return 'vim'
