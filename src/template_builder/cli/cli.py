@@ -59,7 +59,8 @@ def use_editor() -> str:
 
 @cli_app.command('set-model')
 def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print function after setting model.'),
-                 compile_: bool = Option(False, '--compile', '-c', help='Run compile function after setting model')):
+                 compile_: bool = Option(False, '--compile', '-c', help='Run compile function after setting model'),
+                 edit: bool = Option(True, '--no-edit', '-n', help='Open an editor to make changes')):
     """
     Select a model, and update the attributes to be printed in.
     """
@@ -116,16 +117,19 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
         app_conf.current_config = selection
         _update_config('app', 'cached_info', {'current_config': selection})
 
-    complete_ = sp.run((use_editor(), get_proj_conf_file().as_posix()))
+    if edit:
+        complete_ = sp.run((use_editor(), get_proj_conf_file().as_posix()))
 
-    if complete_:
-        print(f'[green]config file has been updated accordingly.[/green]')
+        if complete_:
+            print(f'[green]config file has been updated accordingly.[/green]')
 
-        if compile_:
-            review_template()
+            if compile_:
+                review_template()
 
-        if build_:
-            build()
+            if build_:
+                build()
+    else:
+        print(f'written config file to: \n{get_proj_conf_file().as_posix()}')
 
 
 @cli_app.command('print')

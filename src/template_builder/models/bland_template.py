@@ -8,3 +8,4 @@ class BlandTemplate(BuilderConfigBase):
     code_type: str
     row_list: List[str]
     created_on: str = datetime.now().strftime('%F')
+    nested_list: List[List[str]]

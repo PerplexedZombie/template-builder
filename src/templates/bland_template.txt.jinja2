@@ -7,6 +7,14 @@ Let's list some things:
     {{ loop.index }}. {% if loop.index is even %}{{ "'%s'"|format(row|title) }}{% else %}{{ row|title }}{% endif %}
 {% endfor %}
 
+Oof. Ouch. Owie. My recursion
+{% for list_row in nested_list -%}
+    Using list. {{ loop.index }}
+        {% for row in list_row -%}
+            {{ loop.index }}: {{ row }}
+        {% endfor %}
+{% endfor %}
+
 Haha, managing to quote things is complicated.
 
 created on {{ created_on }}

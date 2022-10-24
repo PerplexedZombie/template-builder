@@ -5,6 +5,7 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Callable
+from typing import Union
 from re import Pattern
 from re import compile
 
@@ -14,6 +15,7 @@ from tomlkit import load
 
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.template_builder import TemplateBuilder
+from src.template_builder.logic_files.init_scripts import _toml_literal_string
 from src.template_builder.models.builder_config_base import BuilderConfigBase
 from src.template_builder import app_conf
 from src.template_builder import project_dir_
@@ -78,23 +80,35 @@ def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBa
     return loaded_class
 
 
+def _get_schema_types(items: Union[Dict[str, Any], Any]) -> str:
+    """Correctly return a string representing the type for data field.
+    Uses recursion to deal with nested lists.
+
+    eg.
+    type of int, returns "int".
+    type of List[int] returns "List[int]"
+    type of List[List[List[List[List[string]]]]] will keep passing down until it returns just string, and each pass up
+    will wrap the previous return in "List[...]" eventually ending with "List[List[List[List[List[string]]]]]"
+    """
+    if not isinstance(items, dict):
+        return items
+    else:
+        nested_type_: str = items.get('type')
+        if nested_type_ not in ('object', 'array'):
+            return nested_type_
+        elif nested_type_ == 'array':
+            return f'List[{_get_schema_types(items.get("items"))}]'
+
+
 def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tuple[str, str, Any]]:
     model_props = model.schema()['properties']
 
     fields: List[Tuple[str, str, Any]] = []
     update_fields = fields.append
-    # Oh god I need to recurse this...
+
     for val_name, val_type_ph in model_props.items():
-        if (val_type := val_type_ph.get('type')) not in ('array', 'object'):
-            update_fields((val_name, val_type, val_type_ph.get('default', '')))
+        update_fields((val_name, _get_schema_types(val_type_ph), val_type_ph.get('default', _toml_literal_string())))
 
-        elif val_type_ph.get('type') == 'array':
-            val_type = f'List[{val_type_ph["items"].get("type")}]'
-            update_fields((val_name, val_type, val_type_ph.get('default', '')))
-
-        elif val_type_ph.get('type') == 'object':
-            val_type = f'Dict[str, {val_type_ph["additionalProperties"].get("type")}]'
-            update_fields((val_name, val_type, val_type_ph.get('default', '')))
 
     return fields
 

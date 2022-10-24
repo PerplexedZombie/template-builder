@@ -31,7 +31,7 @@ def _toml_literal_string(s: Optional[str] = None) -> str:
     return lit_s
 
 
-def _make_app_settings(app_version: str, doc_version: str) -> tomlTable:
+def _make_app_settings(app_version: str, doc_version: str, cache: bool = False) -> tomlTable:
     app_settings: tomlTable = table()
 
     app_settings.add(nl())
@@ -105,9 +105,11 @@ def _make_cache_config(app_version: str, doc_version: str) -> document:
     app_settings: tomlTable = _make_app_settings(app_version, doc_version)
     app_settings_iter: tomlTable = app_settings.copy()
     for i in app_settings_iter.keys():
+        print(f'{i=}')
         if i not in OVERRIDES:
             app_settings.remove(i)
     doc.add('app_settings', app_settings)
+    print(f'{doc.keys()=}')
     doc.add(nl())
 
     file_settings: tomlTable = table()
@@ -199,7 +201,7 @@ def check_app_version(app_version: str, loaded_conf: TOMLDocument) -> int:
     return 0
 
 
-def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocument, conf_path: Path):
+def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocument, conf_path: Path) -> int:
 
     if loaded_conf['app_settings']['doc_version'] != doc_version:
         correct_doc_version: int = resolve_version_dif(doc_version, loaded_conf['app_settings']['doc_version'])
@@ -213,7 +215,10 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
                     answer = r
                 else:
                     console.print('Please only respond with "y" or "n".')
-            if answer == 'y':
+            if answer == 'n':
+                return 0
+
+            elif answer == 'y':
                 new_ver: TOMLDocument = _make_stencil_app_config(app_version, doc_version)
                 _write_new_conf_file(conf_path, new_ver)
                 console.print('Overwritten with current file.')
@@ -233,7 +238,7 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
                 if i not in new_ver['app_settings'].keys():
                     current['app_settings'].remove(i)
 
-            new_ver.update(current)
+            new_ver['app_settings'].update(current['app_settings'])
             new_ver['app_settings']['doc_version'] = doc_version
 
             # _write_new_conf_file()?
@@ -241,3 +246,6 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
                 dump(new_ver, scribe)
             console.print(('[#42C476]Now using stencil_app_config.toml version [/#42C476]'
                            f'[bright_cyan]{doc_version}[/bright_cyan]'))
+            return 1
+
+    return 0

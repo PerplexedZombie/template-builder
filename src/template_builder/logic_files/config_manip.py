@@ -6,6 +6,8 @@ from typing import List
 from typing import Tuple
 from typing import Callable
 from typing import Optional
+from typing import Union
+from re import compile
 
 from tomlkit import TOMLDocument
 from tomlkit import comment
@@ -19,6 +21,7 @@ from tomlkit.items import Table as tomlTable
 from src.template_builder.logic_files.build_file import _get_model
 from src.template_builder.logic_files.build_file import _get_schema_from_model
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
+from src.template_builder.logic_files.init_scripts import _toml_literal_string
 
 from src.template_builder.models.builder_config_base import BuilderConfigBase
 
@@ -62,14 +65,29 @@ def _reset_cache_config() -> None:
 
 
 def _correct_default_val(value_type: str):
-    if value_type not in ('string', 'List[string]', 'integer'):
+    # This feels dirty
+    # Use recursion to correctly wrap the default type in appropriate amount of nested arrays.
+    known = compile(r'string|List|int')
+    nested = compile(r'List')
+    nested_type = compile(r'string|int')
+
+    if not known.match(value_type):
         return ''
-    if value_type == 'string':
-        return ''
-    if value_type == 'List[string]':
-        return ['']
-    if value_type == 'integer':
-        return 0
+    else:
+        if value_type == 'string':
+            return _toml_literal_string()
+        elif value_type == 'integer':
+            return 0
+        elif nested.match(value_type):
+            inner_type: Union[str, int] = _correct_default_val(nested_type.findall(value_type)[0])
+            return _nesting_lists(_correct_default_val(inner_type), len(nested.findall(value_type))-1)
+
+
+def _nesting_lists(nested_type: Union[str, int], num_nests: int) -> List[Any]:
+    if num_nests == 0:
+        return [nested_type]
+    else:
+        return [_nesting_lists(nested_type, num_nests - 1)]
 
 
 def _populate_model_fields(model_name: str) -> tomlTable:

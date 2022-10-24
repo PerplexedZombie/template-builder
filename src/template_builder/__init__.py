@@ -30,11 +30,11 @@ while not versions_are_correct:
     with conf_file.open(mode='r') as file:
         toml_config: TOMLDocument = load(file)
 
-    app_ver_check: int = check_app_version(__version__, toml_config)
-    check_doc_version(__version__, __app_doc_version__, toml_config, conf_file)
+    check_app_version(__version__, toml_config)
+    app_doc_version_check: int = check_doc_version(__version__, __app_doc_version__, toml_config, conf_file)
 
     # There is a better way of doing this.
-    if app_ver_check == 0:
+    if app_doc_version_check == 0:
         versions_are_correct = True
 
 app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'])
