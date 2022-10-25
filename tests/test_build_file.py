@@ -6,8 +6,8 @@ from typing import Tuple
 from src.template_builder.logic_files.build_file import _get_model
 from src.template_builder.logic_files.build_file import _get_schema_from_model
 from src.template_builder.logic_files.build_file import _module_to_classname
-from src.template_builder.models.builder_config_base import BuilderConfigBase
-from src.template_builder.models.sproc_template import SprocTemplate
+from src.models.py_models import BuilderConfigBase
+from src.models.py_models import SprocTemplate
 
 
 class TestBuildFile:

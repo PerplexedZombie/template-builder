@@ -1,11 +1,8 @@
 import os.path
 from os import PathLike
-import platform
 from pathlib import Path
 from sys import exit
 from sys import path
-from typing import Generator
-from typing import List
 from typing import Optional
 from typing import Union
 
@@ -32,13 +29,13 @@ def get_global_project_file_ref(dir_str: Union[str, PathLike] = None) -> Path:
         if project_root is None:
             logger.error('Cannot find dir path... Maybe pass a path ref?')
             logger.debug(f'{path=}')
-            exit(1)
+            raise exit(1)
 
     elif isinstance(dir_str, str):
         project_root = Path(dir_str)
         if not project_root.is_dir():
             logger.error(f'passed string is not a directory.')
-            exit(1)
+            raise exit(1)
 
     return project_root
 
@@ -55,10 +52,3 @@ def get_proj_conf_file(file: str = 'file') -> Path:
 
     return conf
 
-
-
-
-
-
-
-# TODO: Tidy this file.

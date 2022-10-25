@@ -1,9 +1,10 @@
 from loguru import logger
-
 from pathlib import Path
 
 from typing import Optional
 from typing import List
+from typing import Dict
+from typing import Any
 
 from tomlkit import nl
 from tomlkit import comment
@@ -31,47 +32,59 @@ def _toml_literal_string(s: Optional[str] = None) -> str:
     return lit_s
 
 
-def _make_app_settings(app_version: str, doc_version: str, cache: bool = False) -> tomlTable:
+def _add_block_to_config_table(table_: tomlTable, comment_: str, key_: str, value_: Any) -> None:
+
+    table_.add(comment(comment_))
+    table_.add(key_, value_)
+    table_.add(nl())
+
+
+def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = False) -> tomlTable:
     app_settings: tomlTable = table()
 
-    app_settings.add(nl())
-    app_settings.add(comment(' App version.'))
-    app_settings.add('app_version', app_version)
-    app_settings.add(nl())
+    META_INFO: List[Dict[str, Any]] = [
+        {'comment_': ' App version.',
+         'key_': 'app_version', 'value_': app_version,
+         'cache_can_override': False},
 
-    app_settings.add(nl())
-    app_settings.add(comment(' Document version.'))
-    app_settings.add('doc_version', doc_version)
-    app_settings.add(nl())
+        {'comment_': ' Document version.',
+         'key_': 'doc_version', 'value_': doc_version,
+         'cache_can_override': False},
 
-    app_settings.add(nl())
-    app_settings.add(comment(' Where to store log files.'))
-    app_settings.add('logging_path', _toml_literal_string())
-    app_settings.add(nl())
+        {'comment_': ' If you wish to use your own py_models, add a path to folder.',
+         'key_': 'alt_model_folder', 'value_': _toml_literal_string(),
+         'cache_can_override': False},
 
-    app_settings.add(comment(' Where you want the file to be saved to.'))
-    app_settings.add('path', _toml_literal_string())
-    app_settings.add(nl())
+        {'comment_': ' Where to store log files.',
+         'key_': 'logging_path', 'value_': _toml_literal_string(),
+         'cache_can_override': True},
 
-    # Test
-    app_settings.add(comment(' New key test.'))
-    app_settings.add('new_key', _toml_literal_string())
-    app_settings.add(nl())
+        {'comment_': ' Where you want the file to be saved to.',
+         'key_': 'path', 'value_': _toml_literal_string(),
+         'cache_can_override': True},
 
-    # TODO: implement this.
-    # app_settings.add(comment(' Alternative directory for templates and models.'))
-    # app_settings.add(comment(' Useful if you want to add your own or edit the provided.'))
-    # app_settings.add('template_path', toml_literal_string())
-    # app_settings.add(nl())
+        {'comment_': ' new key test',
+         'key_': 'new_key', 'value_': 'THIS IS A TEST KEY.',
+         'cache_can_override': False},
 
-    app_settings.add(comment(' Path to editor of choice.'))
-    app_settings.add('editor', _toml_literal_string())
-    app_settings.add(nl())
+        {'comment_': ' Path to editor of choice.',
+         'key_': 'editor', 'value_': _toml_literal_string(),
+         'cache_can_override': True},
 
-    app_settings.add(comment(' Are you using this in WSL?'))
-    app_settings.add(comment(' If you are, set this to "true" without quotes.'))
-    app_settings.add('using_wsl', False)
-    app_settings.add(nl())
+        {'comment_': ' If you are using WSL set this to "true" without quotes.',
+         'key_': 'using_wsl', 'value_': False,
+         'cache_can_override': False}
+    ]
+
+    data_for_file: List[Dict[str, Any]]
+
+    if cache_only:
+        data_for_file = [row for row in META_INFO if row['cache_can_override']]
+    else:
+        data_for_file = META_INFO.copy()
+
+    for row in data_for_file:
+        _add_block_to_config_table(app_settings, row['comment_'], row['key_'], row['value_'])
 
     return app_settings
 
@@ -96,20 +109,14 @@ def _make_stencil_app_config(app_version: str, doc_version: str) -> document:
 
 
 def _make_cache_config(app_version: str, doc_version: str) -> document:
-    OVERRIDES: List[str] = ['logging_path', 'path', 'editor']
 
     doc: document = document()
     doc.add(comment(' Set these to override settings from stencil_app_config for this instance.'))
     doc.add(comment(' Otherwise leave blank to use stencil_app_config.'))
 
-    app_settings: tomlTable = _make_app_settings(app_version, doc_version)
-    app_settings_iter: tomlTable = app_settings.copy()
-    for i in app_settings_iter.keys():
-        print(f'{i=}')
-        if i not in OVERRIDES:
-            app_settings.remove(i)
+    app_settings: tomlTable = _make_app_settings(app_version, doc_version, cache_only=True)
+
     doc.add('app_settings', app_settings)
-    print(f'{doc.keys()=}')
     doc.add(nl())
 
     file_settings: tomlTable = table()

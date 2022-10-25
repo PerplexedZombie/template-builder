@@ -15,7 +15,6 @@ from tomlkit import dump
 from tomlkit import load
 from tomlkit import nl
 from tomlkit import table
-from tomlkit import document
 from tomlkit.items import Table as tomlTable
 
 from src.template_builder.logic_files.build_file import _get_model
@@ -23,7 +22,7 @@ from src.template_builder.logic_files.build_file import _get_schema_from_model
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.init_scripts import _toml_literal_string
 
-from src.template_builder.models.builder_config_base import BuilderConfigBase
+from src.models.py_models.builder_config_base import BuilderConfigBase
 
 from src.template_builder import app_conf
 from loguru import logger
@@ -64,7 +63,7 @@ def _reset_cache_config() -> None:
         dump(config, file)
 
 
-def _correct_default_val(value_type: str):
+def _correct_default_val(value_type: str) -> Union[List[Any], str, int]:
     # This feels dirty
     # Use recursion to correctly wrap the default type in appropriate amount of nested arrays.
     known = compile(r'string|List|int')

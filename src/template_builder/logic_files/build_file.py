@@ -16,7 +16,7 @@ from tomlkit import load
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.template_builder import TemplateBuilder
 from src.template_builder.logic_files.init_scripts import _toml_literal_string
-from src.template_builder.models.builder_config_base import BuilderConfigBase
+from src.models.py_models.builder_config_base import BuilderConfigBase
 from src.template_builder import app_conf
 from src.template_builder import project_dir_
 
@@ -45,7 +45,7 @@ def _setup() -> Dict[str, Any]:
 
 def list_templates() -> List[str]:
     proj: Path = project_dir_
-    model_dir: Path = proj.joinpath('templates/')
+    model_dir: Path = proj.joinpath('models/templates')
     logger.debug(f'{model_dir.is_dir()=}')
 
     template_pattern: Pattern = compile(r'.+(?:_template)')
@@ -73,7 +73,7 @@ def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBa
     class_: str
     file_, class_ = _module_to_classname(template_name)
 
-    module = importlib.import_module(f'src.template_builder.models.{file_}', class_)
+    module = importlib.import_module(f'src.template_builder.models.py_models.{file_}', class_)
 
     loaded_class: Callable[[Dict[str, Any]], BuilderConfigBase] = getattr(module, class_)
     logger.debug(f'getattr returns: {type(loaded_class)}')

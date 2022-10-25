@@ -1,7 +1,6 @@
-from loguru import logger
 from pathlib import Path
 from src.template_builder.logic_files.logger import setup_logger
-from src.template_builder.models._app_model import AppModel
+from src.models.py_models._app_model import AppModel
 from src.template_builder.logic_files.project_dirs import get_global_project_file_ref
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from tomlkit import TOMLDocument
@@ -14,7 +13,7 @@ from src.template_builder.logic_files.init_scripts import check_doc_version
 
 __version__: str = '0.0.6'
 
-__app_doc_version__: str = '0.0.3'
+__app_doc_version__: str = '0.0.4'
 
 __cache_doc_version__: str = '0.0.2'
 

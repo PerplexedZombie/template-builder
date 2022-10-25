@@ -7,6 +7,7 @@ class AppModel(BaseModel):
     app_version: str
     doc_version: str
     project_dir: Path
+    alt_model_folder: Path
     logging_path: Path
     path: str
     new_key: str

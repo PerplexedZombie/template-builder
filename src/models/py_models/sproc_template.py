@@ -1,4 +1,4 @@
-from src.template_builder.models.builder_config_base import BuilderConfigBase
+from src.models.py_models.builder_config_base import BuilderConfigBase
 
 
 class SprocTemplate(BuilderConfigBase):

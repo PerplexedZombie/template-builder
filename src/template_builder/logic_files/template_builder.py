@@ -12,7 +12,7 @@ from jinja2 import FileSystemLoader
 from jinja2 import Template
 from loguru import logger
 
-from src.template_builder.models.builder_config_base import BuilderConfigBase
+from src.models.py_models.builder_config_base import BuilderConfigBase
 
 from src.template_builder import project_dir_
 
