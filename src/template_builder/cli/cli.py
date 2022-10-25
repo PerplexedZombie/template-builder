@@ -1,6 +1,8 @@
 import subprocess as sp
 from typing import Dict
 from typing import List
+from typing import Tuple
+from typing import Union
 from pathlib import Path
 from loguru import logger
 
@@ -157,14 +159,34 @@ def review_template():
 def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This options sets "using_wsl" to True, '
                                                                       'before checking editors.')),
                   show: bool = Option(False, '--existing', '-e', help=('Display current settings before '
-                                                                       'instead of opening an editor'))):
+                                                                       'instead of opening an editor')),
+                  update_field: Tuple[str, str] = Option((None, None), '--update', '-u', help=('Use this option and pass'
+                                                                                        'a key and a new value to'
+                                                                                        'update the key.'))):
     """
     Change app settings.
     """
 
+    prompt_edit: bool = not show
+
     if tick_wsl:
         _update_config('app', 'app_settings', {'using_wsl': True})
         app_conf.using_wsl = True
+
+    update_key: str
+    update_value: str
+
+    update_key, update_value = update_field
+
+    if update_key is not None and update_key not in app_conf.dict().keys():
+        print(red(f'[bold]"{update_key}"[/bold] is not a valid key.'))
+        raise Exit(1)
+
+    elif update_key is not None and update_key in app_conf.dict().keys():
+        _update_config('app', 'app_settings', {update_key: update_value})
+        app_conf.__dict__.update({update_key: update_value})
+
+        prompt_edit = False
 
     if show:
         cur_settings: str = ''
@@ -179,7 +201,7 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
         settings_info: Panel = Panel(cur_settings[:-1], title='App settings', title_align='left')
         console.print(settings_info)
 
-    else:
+    elif prompt_edit:
         try:
             sp.run((use_editor(), get_proj_conf_file('app').as_posix()))
         except FileNotFoundError:

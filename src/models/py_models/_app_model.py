@@ -10,7 +10,6 @@ class AppModel(BaseModel):
     alt_model_folder: Path
     logging_path: Path
     path: str
-    new_key: str
     editor: str
     current_config: str = ''
     using_wsl: bool = False

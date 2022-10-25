@@ -63,10 +63,6 @@ def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = Fa
          'key_': 'path', 'value_': _toml_literal_string(),
          'cache_can_override': True},
 
-        {'comment_': ' new key test',
-         'key_': 'new_key', 'value_': 'THIS IS A TEST KEY.',
-         'cache_can_override': False},
-
         {'comment_': ' Path to editor of choice.',
          'key_': 'editor', 'value_': _toml_literal_string(),
          'cache_can_override': True},
@@ -256,3 +252,5 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
             return 1
 
     return 0
+
+# TODO: Handle removal of keys.
