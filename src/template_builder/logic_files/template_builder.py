@@ -22,7 +22,9 @@ class TemplateBuilder:
     def __init__(self, config: BuilderConfigBase, path: Union[str, Path]):
         self.project_dir = project_dir_
         logger.debug(f'{self.project_dir=}')
-        self.template_dir: str = Path(self.project_dir.joinpath('templates/')).as_posix()
+        self.alt_model_folder: Union[str, Path] = ''
+        self.template_dir: str = ''
+        self._confirm_model_dir()
         self.template_name: str = config.template
         self.provided_path: Union[str, Path] = path
         self.config: BuilderConfigBase = config
@@ -77,6 +79,24 @@ class TemplateBuilder:
         """
         full_file: Path = self.clean_path.joinpath(f'{self.config.file_name}')
         return full_file
+
+    def _confirm_model_dir(self):
+        if self.alt_model_folder:
+            alt_model_dir: Path
+            if isinstance(self.alt_model_folder, str):
+                alt_model_dir = Path(self.alt_model_folder)
+            elif isinstance(self.alt_model_folder, Path):
+                alt_model_dir = self.alt_model_folder
+
+            if alt_model_dir.is_dir():
+                alt_model_dir.joinpath('models').mkdir()
+                alt_model_dir.joinpath('templates').mkdir()
+                self.template_dir = alt_model_dir.joinpath('templates').as_posix()
+            else:
+                ...
+        else:
+            self.template_dir = Path(self.project_dir.joinpath('models/templates/')).as_posix()
+
 
     def build_file(self) -> None:
         full_file: Path = self._produce_full_path_to_file()

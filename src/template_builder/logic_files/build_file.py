@@ -48,14 +48,14 @@ def list_templates() -> List[str]:
     model_dir: Path = proj.joinpath('models/templates')
     logger.debug(f'{model_dir.is_dir()=}')
 
-    template_pattern: Pattern = compile(r'.+(?:_template)')
+    template_pattern: Pattern = compile(r'.+(_template)')
 
     template_list: List[str] = [template.name for template in model_dir.iterdir()
                                 if template_pattern.match(template.name)]
 
     if not template_list:
         logger.error('Not templates to display.')
-        exit(1)
+        raise exit(1)
     return template_list
 
 
@@ -73,7 +73,7 @@ def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBa
     class_: str
     file_, class_ = _module_to_classname(template_name)
 
-    module = importlib.import_module(f'src.template_builder.models.py_models.{file_}', class_)
+    module = importlib.import_module(f'src.models.py_models.{file_}', class_)
 
     loaded_class: Callable[[Dict[str, Any]], BuilderConfigBase] = getattr(module, class_)
     logger.debug(f'getattr returns: {type(loaded_class)}')
@@ -109,7 +109,6 @@ def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tupl
     for val_name, val_type_ph in model_props.items():
         update_fields((val_name, _get_schema_types(val_type_ph), val_type_ph.get('default', _toml_literal_string())))
 
-
     return fields
 
 
@@ -130,8 +129,6 @@ def _get_builder() -> TemplateBuilder:
 
 
 def build() -> None:
-    file_settings: Dict[str, Any] = _setup()
-
     builder = _get_builder()
     builder.build_file()
 

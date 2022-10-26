@@ -114,8 +114,6 @@ def _populate_model_fields(model_name: str) -> tomlTable:
 
 
 # TODO: Clean this up, actually sort out how to handle it.
-# TODO: Add more editors?
-# TODO: Add more path options?
 # TODO: Rewrite tests.
 def config_editor_switch(editor: Optional[str] = None) -> str:
     if editor:
@@ -135,6 +133,11 @@ def find_editor(platform_os: Optional[str] = None, wsl: Optional[bool] = False) 
     if platform_os is None:
         platform_os = system()
 
+    # I think I need to change this slightly and run an initial if to set the path_to_app
+    # to extend to the anticipated starting point:
+    # Program files for Windows?
+    # Applications for Mac?
+    # usr/bin for Linux?
     if wsl and platform_os == 'Windows':
         path_to_app = Path('/mnt/c/')
     else:
@@ -151,6 +154,9 @@ def find_editor(platform_os: Optional[str] = None, wsl: Optional[bool] = False) 
 
     elif (textedit := path_to_app.joinpath('/Applications/TextEdit.app/Contents/MacOS/TextEdit')).exists():
         return textedit.as_posix()
+
+    elif (gedit := path_to_app.joinpath('/usr/bin/gedit')).exists():
+        return gedit.as_posix()
 
     else:
         return 'vim'
