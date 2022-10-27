@@ -32,4 +32,4 @@ class AppModel(BaseModel):
     def confirm_path(cls, v):
         if v:
             cleaned_path: Path = clean_file_path(v)
-        return cleaned_path
+            return cleaned_path
