@@ -19,6 +19,22 @@ from src.template_builder.logic_files.init_scripts import _toml_literal_string
 from src.models.py_models.builder_config_base import BuilderConfigBase
 from src.template_builder import app_conf
 from src.template_builder import project_dir_
+from src.template_builder import project_model_dir_
+
+
+def confirm_template_dir():
+    if app_conf.alt_model_folder:
+        alt_model_dir: Path
+        if isinstance(app_conf.alt_model_folder, str):
+            alt_model_dir = Path(app_conf.alt_model_folder)
+        elif isinstance(app_conf.alt_model_folder, Path):
+            alt_model_dir = app_conf.alt_model_folder
+        return alt_model_dir
+    else:
+        return project_dir_.joinpath('models/templates')
+
+
+TEMPLATE_DIR: Path = confirm_template_dir()
 
 
 def _setup() -> Dict[str, Any]:
@@ -44,8 +60,7 @@ def _setup() -> Dict[str, Any]:
 
 
 def list_templates() -> List[str]:
-    proj: Path = project_dir_
-    model_dir: Path = proj.joinpath('models/templates')
+    model_dir: Path = TEMPLATE_DIR
     logger.debug(f'{model_dir.is_dir()=}')
 
     template_pattern: Pattern = compile(r'.+(_template)')
@@ -123,7 +138,7 @@ def _get_builder() -> TemplateBuilder:
     model: BuilderConfigBase = blueprint(**file_settings)
     logger.success('Built model.')
 
-    builder: TemplateBuilder = TemplateBuilder(model, app_conf.path)
+    builder: TemplateBuilder = TemplateBuilder(model, app_conf.path, TEMPLATE_DIR)
 
     return builder
 

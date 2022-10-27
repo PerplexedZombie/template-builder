@@ -235,11 +235,14 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
 
             new_ver: TOMLDocument = _make_stencil_app_config(app_version, doc_version)
 
-            current_iter: TOMLDocument = current.copy()
+            remove_keys: List[str] = []
 
-            for i in current_iter['app_settings'].keys():
+            for i in current['app_settings'].keys():
                 if i not in new_ver['app_settings'].keys():
-                    current['app_settings'].remove(i)
+                    remove_keys.append(i)
+
+            for i in remove_keys:
+                current['app_settings'].pop(i)
 
             new_ver['app_settings'].update(current['app_settings'])
             new_ver['app_settings']['doc_version'] = doc_version

@@ -17,6 +17,7 @@ from typer import Exit
 from typer import Option
 
 from src.template_builder import app_conf
+from src.template_builder import __version__
 
 from src.template_builder.logic_files.config_manip import _add_to_cache_config
 from src.template_builder.logic_files.config_manip import _populate_model_fields
@@ -28,22 +29,28 @@ from src.template_builder.logic_files.build_file import list_templates
 from src.template_builder.logic_files.build_file import build
 from src.template_builder.logic_files.build_file import compile_template
 
-cli_app: Typer = Typer()
 console: Console = Console()
+cli_app: Typer = Typer(invoke_without_command=True)
 
 
 def _invalid_action(ref: int) -> str:
     errors: Dict[int, str] = {
-        1: red('That is not an option'),
-        2: red('Not implemented.'),
-        3: '[cornflower_blue]No model set, stopping app.[/cornflower_blue]'
+        1: col('red', 'That is not an option'),
+        2: col('red', 'Not implemented.'),
+        3: col('cornflower_blue', 'No model set, stopping app')
     }
 
     return errors[ref]
 
 
-def red(txt: str) -> str:
-    return f'[red]{txt}[/red]'
+def col(colour: str, txt: str) -> str:
+    return f'[{colour}]{txt}[/{colour}]'
+
+
+@cli_app.callback()
+def main(ver_: bool = Option(False, '--version', '-V', help='Show current version.')):
+    if ver_:
+        console.print(f'Stencil version: {__version__}')
 
 
 def use_editor() -> str:
@@ -78,8 +85,8 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
         model_display.add_row(str(index), model)
     console.print(model_display)
 
-    name_str: str = '[white]name[/white]'
-    number_str: str = '[bright_cyan]number[/bright_cyan]'
+    name_str: str = col('white', 'name')
+    number_str: str = col('bright_cyan', 'number')
 
     selection: str = ''
     while not selection:
@@ -115,7 +122,7 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
         _reset_cache_config()
         _add_to_cache_config('file_settings', file_settings)
         _update_config('file', 'file_settings', {'template': selection})
-        print(f'[green]Thank you for picking {selection}![/green]')
+        print(col('green', f'Thank you for picking {selection}!'))
         app_conf.current_config = selection
         _update_config('app', 'cached_info', {'current_config': selection})
 
@@ -123,7 +130,7 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
         complete_ = sp.run((use_editor(), get_proj_conf_file().as_posix()))
 
         if complete_:
-            print(f'[green]config file has been updated accordingly.[/green]')
+            print(col('green', 'config file has been updated accordingly'))
 
             if compile_:
                 review_template()
@@ -179,7 +186,7 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
     update_key, update_value = update_field
 
     if update_key is not None and update_key not in app_conf.dict().keys():
-        print(red(f'[bold]"{update_key}"[/bold] is not a valid key.'))
+        print(col('red', f'[bold]"{update_key}"[/bold] is not a valid key.'))
         raise Exit(1)
 
     elif update_key is not None and update_key in app_conf.dict().keys():
@@ -191,10 +198,10 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
     if show:
         cur_settings: str = ''
 
-        just_val: int = len(max(app_conf.dict(exclude_none=True).keys(), key=len)) + 1
-        logger.debug(f'{max(app_conf.dict(exclude_none=True).keys(), key=len)=}')
+        just_val: int = len(max(app_conf.dict().keys(), key=len)) + 1
+        logger.debug(f'{max(app_conf.dict().keys(), key=len)=}')
 
-        for k, v in app_conf.dict(exclude_none=True).items():
+        for k, v in app_conf.dict().items():
             cur_settings += (f'{k}:'.rjust(just_val) +
                              f'\t{v}')
             cur_settings += '\n'
@@ -206,8 +213,11 @@ def update_config(tick_wsl: bool = Option(False, '--wsl', '-l', help=('This opti
             sp.run((use_editor(), get_proj_conf_file('app').as_posix()))
         except FileNotFoundError:
             print(_invalid_action(2))
-            print(red("D\'oh, I haven\'t added functionality for this yet.."))
+            print(col('red', "D\'oh, I haven\'t added functionality for this yet.."))
             raise Exit(1)
+
+
+
 
 # TODO: Move certain logic out of cli?
 # TODO: Better format tables.

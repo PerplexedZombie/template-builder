@@ -11,13 +11,15 @@ from src.template_builder.logic_files.init_scripts import check_app_version
 from src.template_builder.logic_files.init_scripts import check_doc_version
 
 
-__version__: str = '0.0.6'
+__version__: str = '0.0.7'
 
-__app_doc_version__: str = '0.0.4'
+__app_doc_version__: str = '0.0.5'
 
 __cache_doc_version__: str = '0.0.2'
 
 project_dir_: Path = get_global_project_file_ref()
+
+project_model_dir_: Path = project_dir_.joinpath('models/py_models')
 
 
 # Why is this a function?
