@@ -1,0 +1,8 @@
+from src.models.py_models.builder_config_base import BuilderConfigBase
+from typing import Union
+{% set match_type = {'var': 'Union\[str, int]', 'iterable': 'List[Union\[str, int]]'} %}
+
+class {{ new_model_name }}(BuilderConfigBase):
+    {% for field in field_list -%}
+    {{ field[0] }}: {{ match_type[field[1]] }}
+    {% endfor %}
