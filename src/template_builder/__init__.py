@@ -42,12 +42,12 @@ app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_setti
 
 
 def confirm_template_dir() -> Path:
-    if app_conf.alt_model_folder:
+    if app_conf.custom_model_folder:
         alt_model_dir: Path
-        if isinstance(app_conf.alt_model_folder, str):
-            alt_model_dir = Path(app_conf.alt_model_folder)
-        elif isinstance(app_conf.alt_model_folder, Path):
-            alt_model_dir = app_conf.alt_model_folder
+        if isinstance(app_conf.custom_model_folder, str):
+            alt_model_dir = Path(app_conf.custom_model_folder)
+        elif isinstance(app_conf.custom_model_folder, Path):
+            alt_model_dir = app_conf.custom_model_folder
         return alt_model_dir
     else:
         return project_dir_.joinpath('models/templates')

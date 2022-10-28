@@ -8,7 +8,7 @@ class AppModel(BaseModel):
     app_version: str
     doc_version: str
     project_dir: Path
-    alt_model_folder: Union[str, Path]
+    custom_model_folder: Union[str, Path]
     logging_path: Path
     path: Union[str, Path]
     editor: str
@@ -16,7 +16,7 @@ class AppModel(BaseModel):
     using_wsl: bool = False
 # TODO: Add method of allowing other model folder.
 
-    @validator('alt_model_folder')
+    @validator('custom_model_folder')
     def confirm_model_dir(cls, v):
         alt_model_dir: Path
         if v:

@@ -91,5 +91,5 @@ class ModelManager:
         builder = TemplateBuilder(new_model, self.model_dir, self.template_dir)
         builder.build_file()
 
-# TODO: Actually reverse a template
-# TODO: Integrate to buildfile.
+# TODO: Add way to update model.
+#
