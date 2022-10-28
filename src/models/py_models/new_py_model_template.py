@@ -3,5 +3,5 @@ from typing import List
 
 
 class NewPyModelTemplate(BuilderConfigBase):
-    new_model_name: str
+    new_model_class_name: str
     field_list: List[List[str]]

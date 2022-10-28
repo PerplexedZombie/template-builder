@@ -28,6 +28,7 @@ from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.build_file import list_templates
 from src.template_builder.logic_files.build_file import build
 from src.template_builder.logic_files.build_file import compile_template
+from src.template_builder.logic_files.model_manager import ModelManager
 
 console: Console = Console()
 cli_app: Typer = Typer(invoke_without_command=True)
@@ -116,6 +117,9 @@ def choose_model(build_: bool = Option(False, '--print', '-p', help='Run print f
 
     logger.debug(f'{selection=}')
     logger.debug(f'{app_conf.current_config=}')
+
+    mm = ModelManager()
+    mm.handle_model(selection)
 
     if selection != app_conf.current_config:
         file_settings: tomlTable = _populate_model_fields(selection)

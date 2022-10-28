@@ -40,6 +40,21 @@ while not versions_are_correct:
 
 app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'])
 
+
+def confirm_template_dir() -> Path:
+    if app_conf.alt_model_folder:
+        alt_model_dir: Path
+        if isinstance(app_conf.alt_model_folder, str):
+            alt_model_dir = Path(app_conf.alt_model_folder)
+        elif isinstance(app_conf.alt_model_folder, Path):
+            alt_model_dir = app_conf.alt_model_folder
+        return alt_model_dir
+    else:
+        return project_dir_.joinpath('models/templates')
+
+
+TEMPLATE_DIR = confirm_template_dir()
+
 # Mypy OP. Guido pls nerf.
 _log_path_str: str = str(app_conf.logging_path)
 assert isinstance(_log_path_str, str)
