@@ -1,5 +1,5 @@
 from typing import List
-from src.models.py_models.builder_config_base import BuilderConfigBase
+from src.project_models.py_models.builder_config_base import BuilderConfigBase
 {% set match_type = {'var': 'str', 'iterable': 'List[str]'} %}
 
 class {{ new_model_class_name }}(BuilderConfigBase):

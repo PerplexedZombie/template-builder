@@ -22,7 +22,7 @@ from src.template_builder.logic_files.build_file import _get_schema_from_model
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.init_scripts import _toml_literal_string
 
-from src.models.py_models.builder_config_base import BuilderConfigBase
+from src.project_models.py_models.builder_config_base import BuilderConfigBase
 
 from src.template_builder import app_conf
 from loguru import logger
@@ -71,14 +71,24 @@ def _correct_default_val(value_type: str) -> Union[List[Any], str, int]:
     nested_type = compile(r'string|int')
 
     if not known.match(value_type):
-        return ''
+        logger.debug(f'no match for {value_type=}')
+        if value_type == '':
+            return ''
+        if value_type == '0':
+            return 0
     else:
         if value_type == 'string':
+            logger.debug(f'matched string for {value_type=}')
             return _toml_literal_string()
-        elif value_type == 'integer':
+        elif value_type == 'int':
+            logger.debug(f'matched int for {value_type=}')
             return 0
         elif nested.match(value_type):
+            logger.debug(f'matched list for {value_type=}')
             inner_type: Union[str, int] = _correct_default_val(nested_type.findall(value_type)[0])
+            logger.debug(f'Calling _nesting_lists on {inner_type=}')
+            if inner_type == 0:
+                inner_type = '0'
             return _nesting_lists(_correct_default_val(inner_type), len(nested.findall(value_type))-1)
 
 
