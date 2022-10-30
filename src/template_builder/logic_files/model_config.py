@@ -58,6 +58,8 @@ def _get_model_from_template(file_name: str) -> List[Tuple[str, str]]:
     single_vars: List[str] = _get_defined_vars(var_pat, content)
     loop_vars: List[str] = _get_defined_vars(for_list_pat, content)
     iters: List[str] = _get_defined_vars(for_iter_pat, content)
+    logger.debug(f'{loop_vars=}')
+    logger.debug(f'{single_vars=}')
     for i in iters:
         if i in loop_vars:
             loop_vars.remove(i)
@@ -66,6 +68,8 @@ def _get_model_from_template(file_name: str) -> List[Tuple[str, str]]:
 
     singles: List[Tuple[str, str]] = [(var, 'var') for var in single_vars]
     loops: List[Tuple[str, str]] = [(var, 'iterable') for var in loop_vars]
+    logger.debug(f'{loops=}')
+    logger.debug(f'{singles=}')
 
     singles.extend(loops)
 
