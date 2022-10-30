@@ -6,8 +6,6 @@ from typing import List
 from typing import Tuple
 from typing import Callable
 from typing import Union
-from re import Pattern
-from re import compile
 
 from loguru import logger
 from tomlkit import TOMLDocument
@@ -16,9 +14,9 @@ from tomlkit import load
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from src.template_builder.logic_files.template_builder import TemplateBuilder
 from src.template_builder.logic_files.init_scripts import _toml_literal_string
-from src.models.py_models.builder_config_base import BuilderConfigBase
+from src.project_models.py_models.builder_config_base import BuilderConfigBase
 from src.template_builder import app_conf
-from src.template_builder import project_dir_
+from src.template_builder import TEMPLATE_DIR
 
 
 def _setup() -> Dict[str, Any]:
@@ -43,20 +41,16 @@ def _setup() -> Dict[str, Any]:
     return file_settings
 
 
-def list_templates() -> List[str]:
-    proj: Path = project_dir_
-    model_dir: Path = proj.joinpath('models/templates')
-    logger.debug(f'{model_dir.is_dir()=}')
+def list_dir_items(dir_: Path) -> List[str]:
+    logger.debug(f'{dir_.is_dir()=}')
 
-    template_pattern: Pattern = compile(r'.+(?:_template)')
+    file_list: List[str] = [file_.name for file_ in dir_.iterdir()
+                            if file_.name[0] != '_']
 
-    template_list: List[str] = [template.name for template in model_dir.iterdir()
-                                if template_pattern.match(template.name)]
-
-    if not template_list:
+    if not file_list:
         logger.error('Not templates to display.')
-        exit(1)
-    return template_list
+        raise exit(1)
+    return file_list
 
 
 def _module_to_classname(name_str: str) -> Tuple[str, str]:
@@ -73,7 +67,7 @@ def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBa
     class_: str
     file_, class_ = _module_to_classname(template_name)
 
-    module = importlib.import_module(f'src.template_builder.models.py_models.{file_}', class_)
+    module = importlib.import_module(f'src.project_models.py_models.{file_}', class_)
 
     loaded_class: Callable[[Dict[str, Any]], BuilderConfigBase] = getattr(module, class_)
     logger.debug(f'getattr returns: {type(loaded_class)}')
@@ -109,7 +103,6 @@ def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tupl
     for val_name, val_type_ph in model_props.items():
         update_fields((val_name, _get_schema_types(val_type_ph), val_type_ph.get('default', _toml_literal_string())))
 
-
     return fields
 
 
@@ -124,14 +117,12 @@ def _get_builder() -> TemplateBuilder:
     model: BuilderConfigBase = blueprint(**file_settings)
     logger.success('Built model.')
 
-    builder: TemplateBuilder = TemplateBuilder(model, app_conf.path)
+    builder: TemplateBuilder = TemplateBuilder(model, app_conf.path, TEMPLATE_DIR)
 
     return builder
 
 
 def build() -> None:
-    file_settings: Dict[str, Any] = _setup()
-
     builder = _get_builder()
     builder.build_file()
 
