@@ -9,6 +9,8 @@ from src.template_builder.logic_files.init_scripts import resolve_version_dif
 from src.template_builder.logic_files.init_scripts import ensure_config_files_exist
 from src.template_builder.logic_files.init_scripts import check_app_version
 from src.template_builder.logic_files.init_scripts import check_doc_version
+from pydantic import ValidationError
+from typer import Exit
 
 
 __version__: str = '0.0.7'
@@ -38,8 +40,11 @@ while not versions_are_correct:
     if app_doc_version_check == 0:
         versions_are_correct = True
 
-app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'])
-
+try:
+    app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'])
+except ValidationError as e:
+    print(e.errors())
+    raise Exit()
 
 def confirm_template_dir() -> Path:
     if app_conf.custom_model_folder:

@@ -23,16 +23,37 @@ from rich.prompt import Prompt
 console: Console = Console(style='orange_red1')
 
 
-def _toml_literal_string(s: Optional[str] = None) -> str:
-    lit_s: str
-    if s:
-        lit_s: str = tomlString(s, literal=True)
-    else:
-        lit_s = tomlString('', literal=True)
+def _toml_literal_string(s: str = '') -> str:
+    """
+    Wrapper for tomlkit String function. Used to produce toml string literals.
+
+    Args:
+        s (str): String to be wrapped in literals. [Default is ""]
+
+    Returns:
+        str: toml string literal
+
+    """
+
+    lit_s: str = tomlString(s, literal=True)
+
     return lit_s
 
 
 def _add_block_to_config_table(table_: tomlTable, comment_: str, key_: str, value_: Any) -> None:
+    """
+    Shortcut function to add comment above and a newline below each header.
+
+    Args:
+        table_ (tomlkit.items.Table): tomlTable to call 'add' method on.
+        comment_ (str): Comment string to be added above header.
+        key_ (str): Header key name.
+        value_ (str):  Header key value.
+
+    Returns:
+        None
+
+    """
 
     table_.add(comment(comment_))
     table_.add(key_, value_)
@@ -40,6 +61,18 @@ def _add_block_to_config_table(table_: tomlTable, comment_: str, key_: str, valu
 
 
 def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = False) -> tomlTable:
+    """
+    Produce the code version of the [app_settings] group for *.toml file.
+
+    Args:
+        app_version (str): Should be the semver of the current code. E.G "0.0.6"
+        doc_version (str): Should be the semver of the current document. E.G "0.0.5"
+        cache_only (bool): If True only return the keys that can be overriden by cache_config.toml [Default is False]
+
+    Returns:
+        tomlkit.items.Table: tomlTable representing the .toml file to be written.
+
+    """
     app_settings: tomlTable = table()
 
     META_INFO: List[Dict[str, Any]] = [
@@ -52,7 +85,7 @@ def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = Fa
          'cache_can_override': False},
 
         {'comment_': ' If you wish to use your own py_models, add a path to folder.',
-         'key_': 'alt_model_folder', 'value_': _toml_literal_string(),
+         'key_': 'custom_model_folder', 'value_': _toml_literal_string(),
          'cache_can_override': False},
 
         {'comment_': ' Where to store log files.',
@@ -86,6 +119,17 @@ def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = Fa
 
 
 def _make_stencil_app_config(app_version: str, doc_version: str) -> document:
+    """
+    Produce code version of stencil_app_config.toml file.
+
+    Args:
+        app_version (str): Should be the semver of the current code. E.G "0.0.6"
+        doc_version (str): Should be the semver of the current document. E.G "0.0.5"
+
+    Returns:
+        tomlkit.document: document representing the stencil_app_config.toml file to be written
+
+    """
     doc: document = document()
 
     app_settings: tomlTable = _make_app_settings(app_version, doc_version)
@@ -105,6 +149,17 @@ def _make_stencil_app_config(app_version: str, doc_version: str) -> document:
 
 
 def _make_cache_config(app_version: str, doc_version: str) -> document:
+    """
+    Produce code version of cache_config.toml file.
+
+    Args:
+        app_version (str): Should be the semver of the current code. E.G "0.0.6"
+        doc_version (str): Should be the semver of the current document. E.G "0.0.5"
+
+    Returns:
+        tomlkit.document: document representing the cache_config.toml file to be written
+
+    """
 
     doc: document = document()
     doc.add(comment(' Set these to override settings from stencil_app_config for this instance.'))
@@ -127,13 +182,33 @@ def _make_cache_config(app_version: str, doc_version: str) -> document:
     return doc
 
 
-def _write_new_conf_file(path: Path, conf_foc: TOMLDocument):
+def _write_new_conf_file(path: Path, conf_foc: TOMLDocument) -> None:
+    """
+    Shortcut function to quickly write conf file.
+    Args:
+        path (Path): Path object to where file should be written
+        conf_foc (tomlkit.TOMLDocument): Config to be written.
+
+    Returns:
+        None
+    """
     with path.open('w') as scribe:
         dump(conf_foc, scribe)
 
 
 # Wow. This is awful.
 def resolve_version_dif(src_ver: str, read_ver: str) -> int:
+    """
+    Find the latest version between code version and supplied version.
+
+    Args:
+        src_ver: Current code version (usually __version__).
+        read_ver: Supplied code version.
+
+    Returns:
+        int: 1 if src_ver is newer. -1 if read_ver is newer.
+    """
+
     src_maj: int
     src_min: int
     src_pat: int
@@ -158,6 +233,16 @@ def resolve_version_dif(src_ver: str, read_ver: str) -> int:
 
 
 def ensure_config_files_exist(app_version: str, doc_version: str) -> None:
+    """
+    Check config files exist at desired location, and make them if they don't.
+
+    Args:
+        app_version (str): Should be the semver of the current code. E.G "0.0.6"
+        doc_version (str): Should be the semver of the current document. E.G "0.0.5"
+
+    Returns:
+        None
+    """
     processing: bool = True
     while processing:
         home: Path = Path.home()
@@ -188,6 +273,16 @@ def ensure_config_files_exist(app_version: str, doc_version: str) -> None:
 
 
 def check_app_version(app_version: str, loaded_conf: TOMLDocument) -> int:
+    """
+    Compare code version to loaded conf version.
+
+    Args:
+        app_version (str): Should be the semver of the current code. E.G "0.0.6"
+        loaded_conf (tomlkit.TOMLDocument): Python representation of .toml file.
+
+    Returns:
+        int: 0 if version match, 1 if version do not match.
+    """
 
     if loaded_conf['app_settings']['app_version'] != app_version:
         correct_app_version: int = resolve_version_dif(app_version, loaded_conf['app_settings']['app_version'])
@@ -205,6 +300,18 @@ def check_app_version(app_version: str, loaded_conf: TOMLDocument) -> int:
 
 
 def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocument, conf_path: Path) -> int:
+    """
+    Compare code version to loaded conf version.
+
+    Args:
+        app_version (str): Should be the semver of the current code. E.G "0.0.6":
+        doc_version (str): Should be the semver of the current document. E.G "0.0.5"
+        loaded_conf (tomlkit.TOMLDocument): Python representation of .toml file.:
+        conf_path (Path): Path object to where file should be written.
+
+    Returns:
+        int: 0 if version match, 1 if version do not match.
+    """
 
     if loaded_conf['app_settings']['doc_version'] != doc_version:
         correct_doc_version: int = resolve_version_dif(doc_version, loaded_conf['app_settings']['doc_version'])
@@ -247,9 +354,7 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
             new_ver['app_settings'].update(current['app_settings'])
             new_ver['app_settings']['doc_version'] = doc_version
 
-            # _write_new_conf_file()?
-            with conf_path.open('w') as scribe:
-                dump(new_ver, scribe)
+            _write_new_conf_file(conf_path, new_ver)
             console.print(('[#42C476]Now using stencil_app_config.toml version [/#42C476]'
                            f'[bright_cyan]{doc_version}[/bright_cyan]'))
             return 1
