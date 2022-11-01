@@ -18,7 +18,11 @@ from typing import List
 from typing import Dict
 from typing import Optional
 from typing import Any
+from rich.console import Console
+from rich.panel import Panel
+from rich.columns import Columns
 
+console: Console = Console(style='orange_red1')
 
 __version__: str = '0.0.7'
 
@@ -30,6 +34,33 @@ project_dir_: Path = get_global_project_file_ref()
 
 project_model_dir_: Path = project_dir_.joinpath('project_models/py_models')
 
+"""
+Config changes within this file are made to get app_conf initialised, however any 
+actual changes to the .toml file should be done with use of config_manip in appropriate
+files.
+
+Because of this, the below var exists, to track any changes that should not be done
+in this file, but may crop up in this file (such as ignored keys), which will then be 
+handled in the cli/__init__.
+
+I was going to make a TypedDict for this, but setting it up looked a lot like Pydantic.
+So maybe it should just be a model? Seems a lot for a var.
+
+Will look like:
+
+{'updates': [
+             {header: <val>,
+              key: <val>,
+              value: <val>}, ...],
+ 'deletes': [
+             {header: <val>,
+              key: <val>,
+              value: <val>}, ...]
+ }
+"""
+
+# This could (should?) be a pydantic class?
+delayed_changes: Dict[str, List[Dict[str, str]]] = {}
 
 # Why is this a function?
 ensure_config_files_exist(__version__, __app_doc_version__)
@@ -60,8 +91,8 @@ except ValidationError as e:
     errors: Set[str] = set([missing['type'] for missing in e.errors()])
 
     if 'value_error.missing' in errors:
-        print('You seem to be missing value from stencil_app_config.toml.')
-        print('Quickly refreshing fields for you..')
+        console.print('You seem to be missing value from stencil_app_config.toml.')
+        console.print('Quickly refreshing fields for you, this will not delete any current info.')
         full_app_settings: tomlTable = _make_app_settings(__version__, __app_doc_version__)
         full_app_settings.update(**toml_config['app_settings'])
         toml_config['app_settings'] = full_app_settings
@@ -70,8 +101,10 @@ except ValidationError as e:
                                for extra in e.errors()
                                if extra['type'] == 'value_error.extra']
     if extra_fields:
-        print('These fields do not exist in the app model, you may wish to review.')
-        print('For now we are ignoring them.')
+        console.print('These fields do not exist in the app model, you may wish to review.')
+        not_valid_keys: List[Panel] = [Panel(f'[#f38d6a][b]{extra}') for extra in extra_fields]
+        console.print(Columns(not_valid_keys))
+        console.print('For now we are ignoring them.')
         if ignored_settings is None:
             ignored_settings = []
         ignore = ignored_settings.append

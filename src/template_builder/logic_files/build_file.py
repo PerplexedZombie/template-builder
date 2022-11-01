@@ -20,6 +20,12 @@ from src.template_builder import TEMPLATE_DIR
 
 
 def _setup() -> Dict[str, Any]:
+    """
+    Perform pre-requisite functions and get file data.
+
+    Returns:
+        Dict[str, Any]: Jinja kwargs for selected template.
+    """
 
     conf_file: Path = get_proj_conf_file()
     with conf_file.open(mode='r') as file:
@@ -42,6 +48,15 @@ def _setup() -> Dict[str, Any]:
 
 
 def list_dir_items(dir_: Path) -> List[str]:
+    """
+    List the files in a directory.
+
+    Args:
+        dir_ (Path): Path object with full path to dir.
+
+    Returns:
+        List[str]: List of every file name in dir.
+    """
     logger.debug(f'{dir_.is_dir()=}')
 
     file_list: List[str] = [file_.name for file_ in dir_.iterdir()
@@ -54,6 +69,16 @@ def list_dir_items(dir_: Path) -> List[str]:
 
 
 def _module_to_classname(name_str: str) -> Tuple[str, str]:
+    """
+    Convert module name to anticipated class name.
+    EG builder_config_base.py -> BuilderConfigBase
+
+    Args:
+        name_str (str): file_name to be converted.
+
+    Returns:
+        Tuple[str, str]: file name without extension, anticipated class name.
+    """
     file_name: str = name_str.split('.')[0]
 
     class_name: str = ''.join([part.lower().title()
@@ -63,6 +88,15 @@ def _module_to_classname(name_str: str) -> Tuple[str, str]:
 
 
 def _get_model(template_name: str) -> Callable[[Dict[str, Any]], BuilderConfigBase]:
+    """
+    Dynamically load a class from model folder.
+
+    Args:
+        template_name: Template name to load model for.
+
+    Returns:
+        BuilderConfigBase: Class callable. Akin to 'from [file] import [class]'.
+    """
     file_: str
     class_: str
     file_, class_ = _module_to_classname(template_name)
@@ -95,6 +129,14 @@ def _get_schema_types(items: Union[Dict[str, Any], Any]) -> str:
 
 
 def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tuple[str, str, Any]]:
+    """
+    Using Pydantic determine fields for user to populate.
+    Args:
+        model (Callable(BuilderConfigBase)): Pydantic model for Template.
+
+    Returns:
+        List[Tuple[str, str, Any]]: For each field return: name, expected type, default [appropriate blank if none].
+    """
     model_props = model.schema()['properties']
 
     fields: List[Tuple[str, str, Any]] = []
@@ -107,6 +149,12 @@ def _get_schema_from_model(model: Callable[..., BuilderConfigBase]) -> List[Tupl
 
 
 def _get_builder() -> TemplateBuilder:
+    """
+    Perform set up and return validated TemplateBuilder object.
+
+    Returns:
+        TemplateBuilder: Object to populate a Jinja template.
+    """
     file_settings: Dict[str, Any] = _setup()
 
     logger.info('Marking blueprints')
@@ -123,6 +171,11 @@ def _get_builder() -> TemplateBuilder:
 
 
 def build() -> None:
+    """
+    Produce output of Jinja template.
+    Returns:
+
+    """
     builder = _get_builder()
     builder.build_file()
 
@@ -133,4 +186,3 @@ def compile_template() -> Tuple[str, str]:
     return builder.content, builder.content_kwargs['file_name']
 
 # TODO: Add error handling?
-# TODO: Reverse a Jinja template..?
