@@ -75,6 +75,8 @@ def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = Fa
     """
     app_settings: tomlTable = table()
 
+    default_log: str = _toml_literal_string(Path.home().joinpath('.config/stencil_app/.log_files').as_posix())
+
     META_INFO: List[Dict[str, Any]] = [
         {'comment_': ' App version.',
          'key_': 'app_version', 'value_': app_version,
@@ -88,8 +90,9 @@ def _make_app_settings(app_version: str, doc_version: str, cache_only: bool = Fa
          'key_': 'custom_model_folder', 'value_': _toml_literal_string(),
          'cache_can_override': False},
 
+        # default is config folder.
         {'comment_': ' Where to store log files.',
-         'key_': 'logging_path', 'value_': _toml_literal_string(),
+         'key_': 'logging_path', 'value_': default_log,
          'cache_can_override': True},
 
         {'comment_': ' Where you want the file to be saved to.',
@@ -133,9 +136,6 @@ def _make_stencil_app_config(app_version: str, doc_version: str) -> document:
     doc: document = document()
 
     app_settings: tomlTable = _make_app_settings(app_version, doc_version)
-    # default is config folder.
-    default_log: str = _toml_literal_string(Path.home().joinpath('.config/stencil_app/.log_files').as_posix())
-    app_settings.update({'logging_path': default_log})
 
     doc.add('app_settings', app_settings)
     doc.add(nl())
@@ -144,6 +144,9 @@ def _make_stencil_app_config(app_version: str, doc_version: str) -> document:
     cached_info.add('current_config', _toml_literal_string())
 
     doc.add('cached_info', cached_info)
+
+    ignored_settings: tomlTable = table()
+    doc.add('ignored_settings', ignored_settings)
 
     return doc
 

@@ -5,12 +5,19 @@ from src.template_builder.logic_files.project_dirs import get_global_project_fil
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from tomlkit import TOMLDocument
 from tomlkit import load
+from tomlkit.items import Table as tomlTable
 from src.template_builder.logic_files.init_scripts import resolve_version_dif
 from src.template_builder.logic_files.init_scripts import ensure_config_files_exist
 from src.template_builder.logic_files.init_scripts import check_app_version
 from src.template_builder.logic_files.init_scripts import check_doc_version
+from src.template_builder.logic_files.init_scripts import _make_app_settings
 from pydantic import ValidationError
 from typer import Exit
+from typing import Set
+from typing import List
+from typing import Dict
+from typing import Optional
+from typing import Any
 
 
 __version__: str = '0.0.7'
@@ -40,11 +47,44 @@ while not versions_are_correct:
     if app_doc_version_check == 0:
         versions_are_correct = True
 
+ignored_settings: Optional[List[Dict[str, Any]]]
+if toml_config['ignored_settings']:
+    ignored_settings = [{k: v} for k, v in toml_config['ignored_settings'].items()]
+else:
+    ignored_settings = None
+
 try:
-    app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'])
+    app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'],
+                                  ignored_settings=ignored_settings)
 except ValidationError as e:
-    print(e.errors())
-    raise Exit()
+    errors: Set[str] = set([missing['type'] for missing in e.errors()])
+
+    if 'value_error.missing' in errors:
+        print('You seem to be missing value from stencil_app_config.toml.')
+        print('Quickly refreshing fields for you..')
+        full_app_settings: tomlTable = _make_app_settings(__version__, __app_doc_version__)
+        full_app_settings.update(**toml_config['app_settings'])
+        toml_config['app_settings'] = full_app_settings
+
+    extra_fields: List[str] = [extra['loc'][0]
+                               for extra in e.errors()
+                               if extra['type'] == 'value_error.extra']
+    if extra_fields:
+        print('These fields do not exist in the app model, you may wish to review.')
+        print('For now we are ignoring them.')
+        if ignored_settings is None:
+            ignored_settings = []
+        ignore = ignored_settings.append
+        for i in extra_fields:
+            ignore({i: toml_config['app_settings'][i]})
+            toml_config['app_settings'].remove(i)
+
+    try:
+        app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'],
+                                      **toml_config['cached_info'],
+                                      ignored_settings=ignored_settings)
+    except ValidationError as e:
+        raise Exit(1)
 
 def confirm_template_dir() -> Path:
     if app_conf.custom_model_folder:
@@ -66,3 +106,6 @@ assert isinstance(_log_path_str, str)
 
 _log_path: Path = Path(_log_path_str)
 setup_logger(_log_path)
+
+# TODO: Set up var to push config updates down the line.
+# Idea to is make the app startup, then have the CLI init handle the file changes.

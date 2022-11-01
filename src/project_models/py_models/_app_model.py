@@ -1,6 +1,6 @@
 from pydantic import BaseModel, validator, Extra
 from pathlib import Path
-from typing import Dict, Any, Union, Optional
+from typing import Dict, Any, Union, Optional, List
 from src.template_builder.logic_files.project_dirs import clean_file_path
 
 
@@ -14,6 +14,7 @@ class AppModel(BaseModel):
     editor: str
     current_config: str = ''
     using_wsl: bool = False
+    ignored_settings: Optional[List[Dict[str, Any]]] = None
 
     class Config:
         extra = Extra.forbid
