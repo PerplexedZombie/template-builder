@@ -11,7 +11,7 @@ class AppModel(BaseModel):
     project_dir: Path
     custom_model_folder: Union[str, Path]
     logging_path: Union[str, Path]
-    path: Optional[Union[str, Path]]
+    path: Union[str, Path]
     editor: str
     current_config: str = ''
     using_wsl: bool = False

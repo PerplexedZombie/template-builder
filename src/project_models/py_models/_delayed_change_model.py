@@ -16,7 +16,7 @@ class ConfigInfo(TypedDict):
 class DelayedChanged(BaseModel):
     updates: List[ConfigInfo] = []
     deletes: List[ConfigInfo] = []
-    rewrites: List[Dict[str, bool]] = []
+    rewrites: Dict[str, bool] = {}
 
     # Do I need these still?
     def needs_updating(self, info_: ConfigInfo):

@@ -22,23 +22,9 @@ if delayed_changes.updates:
 #     for i in delayed_changes.deletes:
 
 if delayed_changes.rewrites:
-    for i in delayed_changes.rewrites:
-        if i.get('app'):
-            p: Path = get_proj_conf_file('app')
-            cur_conf: Dict[str, Any] = app_conf.dict(exclude_none=True)
-            new_conf = _make_stencil_app_config(__version__, __app_doc_version__)
-            new_conf['app_settings'] = refresh_config(cur_conf, __version__, __app_doc_version__)
-            _write_new_conf_file(p, new_conf)
-        elif i.get('file'):
-            p: Path = get_proj_conf_file('file')
-            new_conf = _make_cache_config(__version__, __cache_doc_version__)
-            _write_new_conf_file(p, new_conf)
-        else:
-            print('oh..?')
-if delayed_changes.rewrites is not None:
     if delayed_changes.rewrites.get('app'):
         p: Path = get_proj_conf_file('app')
-        cur_conf: Dict[str, Any] = app_conf.dict(include={'app_settings'})
+        cur_conf: Dict[str, Any] = app_conf.dict(exclude_none=True)
         new_conf = _make_stencil_app_config(__version__, __app_doc_version__)
         new_conf['app_settings'] = refresh_config(cur_conf, __version__, __app_doc_version__)
         _write_new_conf_file(p, new_conf)
