@@ -33,7 +33,7 @@ class DelayedChanged(BaseModel):
 
     def needs_rewriting(self, info_: Dict[str, bool]):
         if self.rewrites:
-            self.rewrites.append(info_)
+            self.rewrites.update(info_)
         else:
-            self.rewrites = [info_]
+            self.rewrites = info_
 
