@@ -26,9 +26,9 @@ from rich.columns import Columns
 
 console: Console = Console(style='orange_red1')
 
-__version__: str = '0.0.7'
+__version__: str = '0.0.8'
 
-__app_doc_version__: str = '0.0.5'
+__app_doc_version__: str = '0.0.6'
 
 __cache_doc_version__: str = '0.0.2'
 
