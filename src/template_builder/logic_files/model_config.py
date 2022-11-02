@@ -25,17 +25,16 @@ def _get_defined_vars(pattern: Pattern, s: str, boundary_check: bool = True) -> 
     """
     Using regex attempt to match Jinja vars from string.
 
-    Parameters
-    ----------
-    pattern: re.Pattern - Pattern to find matches for
-    s: str - String to be checked for regex pattern.
-    boundary_check: bool = True - If an additional boundary check should be done for matches.
+    Args:
+        pattern (re.Pattern): Pattern to find matches for
+        s (str): String to be checked for regex pattern.
+        boundary_check (bool): If True apply additional boundary check on matches. [Default is True]
 
-    Returns
-    -------
-    List[str] - List of variables found in string that match pattern.
+    Returns:
+        List[str]: List of variables found in string that match pattern.
 
     """
+
     boundary_txt: Pattern = compile(r'(\w+[^%s]\b)')
     final_list: List[str] = []
     # I'm sure there is a better way of doing this, but damned if I know how..
@@ -71,15 +70,15 @@ def _get_defined_vars(pattern: Pattern, s: str, boundary_check: bool = True) -> 
 def _get_model_from_template(file_name: str) -> List[Tuple[str, str]]:
     """
     Attempt to reverse a Jinja template.
-    Parameters
-    ----------
-    file_name: str - Name of template to attempt to reverse.
 
-    Returns
-    -------
-    List[Tuple[str, str]] - List of (Jinja-var-name, "var" | "iterable")
+    Args:
+        file_name (str): Name of template to attempt to reverse.
+
+    Returns:
+        List[Tuple[str, str]] - List of (Jinja-var-name, "var" | "iterable")
 
     """
+
     selected_template: Path = TEMPLATE_DIR.joinpath(file_name)
     var_pat: Pattern = compile(r'{{(?:\s|\w)?((?:(?:\w+|[\"\'(|%])*\w*|[\"\'(|%]*))(?:\s|\w)}}')
     for_list_pat: Pattern = compile(r'(?:{%\s?for\s(?:\w*[-_]?\w*)\sin\s(\w+)(?:\w|\s|[-]){0,3}%})')
@@ -89,7 +88,7 @@ def _get_model_from_template(file_name: str) -> List[Tuple[str, str]]:
         content: str = scribe.read()
 
     single_vars: List[str] = _get_defined_vars(var_pat, content)
-    loop_vars: List[str] = _get_defined_vars(for_list_pat, content, boundry_check=False)
+    loop_vars: List[str] = _get_defined_vars(for_list_pat, content, boundary_check=False)
     iters: List[str] = _get_defined_vars(for_iter_pat, content)
     logger.debug(f'{loop_vars=}')
     logger.debug(f'{single_vars=}')
@@ -112,14 +111,15 @@ def _get_model_from_template(file_name: str) -> List[Tuple[str, str]]:
 def handle_model(file_name: str) -> None:
     """
     Check that the needed model exists in py_models dir.
-    Parameters
-    ----------
-    file_name: str - Name of model to check for.
 
-    Returns
-    -------
-    None
+    Args:
+        file_name (str): Name of model to check for.
+
+    Returns:
+        None
+
     """
+
     print(f'{file_name=}')
     print(f'{py_models=}')
     if file_name.split('.')[0] in py_models:
@@ -133,15 +133,16 @@ def handle_model(file_name: str) -> None:
 def build_model(file_name: str, fields: List[Tuple[str, str]]) -> None:
     """
     Build a new Pydantic model from Jinja-template, for Jinja_template.
-    Parameters
-    ----------
-    file_name: str - New model name (appended with .py)
-    fields: List[Tuple[str, str]]
 
-    Returns
-    -------
-    None
+    Args:
+        file_name (str): New model name (appended with .py)
+        fields (List[Tuple[str, str]]): List of Tuples, each tuple should be ('field_name', 'var' or 'iterable')
+
+    Returns:
+        None
+
     """
+
     file_name_, class_name_ = _module_to_classname(file_name)
     new_model_data: Dict[str, List[Tuple[str, str]]] = {
         # TODO: Add doc_version..?
@@ -161,14 +162,15 @@ def build_model(file_name: str, fields: List[Tuple[str, str]]) -> None:
 def get_model_path(file_name: str) -> Path:
     """
     Get path to Pydantic model.
-    Parameters
-    ----------
-    file_name: str - Name of model to get path for.
 
-    Returns
-    -------
-    Path - Full Path object to model.
+    Args:
+        file_name (str): Name of model to get path for.
+
+    Returns:
+        Path: Full Path object to model.
+
     """
+
     if file_name.split('.')[0] in py_models:
         return py_models_path.joinpath(file_name)
     else:
