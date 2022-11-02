@@ -14,10 +14,11 @@ class ConfigInfo(TypedDict):
 
 
 class DelayedChanged(BaseModel):
-    updates: Optional[List[ConfigInfo]] = None
-    deletes: Optional[List[ConfigInfo]] = None
-    rewrites: Optional[List[Dict[str, bool]]] = None
+    updates: List[ConfigInfo] = []
+    deletes: List[ConfigInfo] = []
+    rewrites: List[Dict[str, bool]] = []
 
+    # Do I need these still?
     def needs_updating(self, info_: ConfigInfo):
         if self.updates:
             self.updates.append(info_)
