@@ -2,19 +2,20 @@ from pydantic import BaseModel, validator, Extra
 from pathlib import Path
 from typing import Dict, Any, Union, Optional, List
 from src.template_builder.logic_files.project_dirs import clean_file_path
+from tomlkit import string as tomlString
 
 
 class AppModel(BaseModel):
     app_version: str
     doc_version: str
     project_dir: Path
-    custom_model_folder: Optional[Union[str, Path]]
-    logging_path: Path
+    custom_model_folder: Union[str, Path]
+    logging_path: Union[str, Path]
     path: Optional[Union[str, Path]]
     editor: str
     current_config: str = ''
     using_wsl: bool = False
-    ignored_settings: Optional[List[Dict[str, Any]]] = None
+    ignored_settings: List[Dict[str, Any]] = []
 
     class Config:
         extra = Extra.forbid
@@ -31,7 +32,7 @@ class AppModel(BaseModel):
             if alt_model_dir.is_dir():
                 return alt_model_dir
         if not v:
-            return None
+            return tomlString('', literal=True)
 
     @validator('path')
     def confirm_path(cls, v):
@@ -39,4 +40,4 @@ class AppModel(BaseModel):
             cleaned_path: Path = clean_file_path(v)
             return cleaned_path
         if not v:
-            return None
+            return tomlString('', literal=True)

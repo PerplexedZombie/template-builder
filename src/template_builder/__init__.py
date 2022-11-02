@@ -84,9 +84,9 @@ try:
     if toml_config['ignored_settings']:
         ignored_settings = [{k: v} for k, v in toml_config['ignored_settings'].items()]
     else:
-        ignored_settings = None
+        ignored_settings = []
 except NonExistentKey as e:
-    ignored_settings = None
+    ignored_settings = []
     delayed_changes.needs_rewriting({'app': True})
 
 try:
@@ -108,8 +108,6 @@ except ValidationError as e:
         not_valid_keys: List[Panel] = [Panel(f'[#f38d6a][b]{extra}') for extra in extra_fields]
         console.print(Columns(not_valid_keys))
         console.print('For now we are ignoring them.')
-        if ignored_settings is None:
-            ignored_settings = []
         ignore = ignored_settings.append
         for i in extra_fields:
             ignore({i: toml_config['app_settings'][i]})
