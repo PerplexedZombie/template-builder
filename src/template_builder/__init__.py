@@ -60,15 +60,22 @@ with conf_file.open(mode='r') as file:
 
 while not versions_are_correct and retry <= 3:
     try:
-        check_app_version(__version__, toml_config)
+        app_ver_check: int = check_app_version(__version__, toml_config)
         app_doc_version_check: int = check_doc_version(__version__, __app_doc_version__, toml_config, conf_file)
 
         # There is a better way of doing this.
-        if app_doc_version_check == 0:
+        if app_doc_version_check == 0 and app_ver_check == 0:
             versions_are_correct = True
         else:
-            retry += 1
+            if app_ver_check == 1:
+                toml_config['app_settings']['app_version'] = __version__
+                delayed_changes.needs_updating({'file': 'app', 'header': 'app_settings',
+                                                'key': 'app_version', 'val': __version__})
+            if app_doc_version_check == 1:
+                toml_config['app_settings']['doc_version'] = __app_doc_version__
+                delayed_changes.needs_rewriting({'app': True})
 
+            retry += 1
 
     except NonExistentKey as e:
         console.print("What\'re you doing mate?!")

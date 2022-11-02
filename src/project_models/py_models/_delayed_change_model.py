@@ -2,7 +2,9 @@ from pydantic import BaseModel
 from pydantic import validator
 from typing import List
 from typing import Dict
+from typing import Set
 from typing import Optional
+from typing import Union
 from typing import TypedDict
 
 
@@ -14,9 +16,9 @@ class ConfigInfo(TypedDict):
 
 
 class DelayedChanged(BaseModel):
-    updates: Optional[List[ConfigInfo]] = None
-    deletes: Optional[List[ConfigInfo]] = None
-    rewrites: Optional[List[Dict[str, bool]]] = None
+    updates: Optional[Union[Set[ConfigInfo], List[ConfigInfo]]] = None
+    deletes: Optional[Union[Set[ConfigInfo], List[ConfigInfo]]] = None
+    rewrites: Optional[Dict[str, bool]] = None
 
     def needs_updating(self, info_: ConfigInfo):
         if self.updates:
@@ -32,7 +34,13 @@ class DelayedChanged(BaseModel):
 
     def needs_rewriting(self, info_: Dict[str, bool]):
         if self.rewrites:
-            self.rewrites.append(info_)
+            self.rewrites.update(info_)
         else:
-            self.rewrites = [info_]
+            self.rewrites = info_
 
+    def convert_to_sets(self):
+        if self.updates is not None:
+            self.updates = set(self.updates)
+
+        if self.deletes is not None:
+            self.deletes = set(self.deletes)
