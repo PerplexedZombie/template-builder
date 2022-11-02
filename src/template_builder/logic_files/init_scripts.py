@@ -364,4 +364,30 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
 
     return 0
 
+def refresh_config(conf: Dict[str, Any] ,app_ver: str, doc_ver: str, conf_name: str = 'app') -> tomlTable:
+    """
+    Rebuild but keep the values of provided settings from toml.
+
+    Args:
+        conf: Dictionary of settings.
+        app_ver:
+        doc_ver:
+        conf_name: Must be either 'app' or 'file'. [Default 'app']
+
+    Returns:
+
+    """
+    cleaned: tomlTable
+    if conf_name not in ('app', 'file'):
+        print('Only accepts "app" or "file".')
+    elif conf_name == 'file':
+        cleaned = _make_cache_config(app_ver, doc_ver)
+    elif conf_name == 'app':
+        cleaned = _make_app_settings(app_ver, doc_ver)
+
+    cleaned.update(**conf)
+
+    return cleaned
+
+
 # TODO: Handle removal of keys.

@@ -1,16 +1,18 @@
 from pathlib import Path
 from src.template_builder.logic_files.logger import setup_logger
 from src.project_models.py_models._app_model import AppModel
+from src.project_models.py_models._delayed_change_model import DelayedChanged
 from src.template_builder.logic_files.project_dirs import get_global_project_file_ref
 from src.template_builder.logic_files.project_dirs import get_proj_conf_file
 from tomlkit import TOMLDocument
 from tomlkit import load
-from tomlkit.items import Table as tomlTable
+from tomlkit.exceptions import NonExistentKey
 from src.template_builder.logic_files.init_scripts import resolve_version_dif
 from src.template_builder.logic_files.init_scripts import ensure_config_files_exist
 from src.template_builder.logic_files.init_scripts import check_app_version
 from src.template_builder.logic_files.init_scripts import check_doc_version
 from src.template_builder.logic_files.init_scripts import _make_app_settings
+from src.template_builder.logic_files.init_scripts import refresh_config
 from pydantic import ValidationError
 from typer import Exit
 from typing import Set
@@ -43,40 +45,38 @@ Because of this, the below var exists, to track any changes that should not be d
 in this file, but may crop up in this file (such as ignored keys), which will then be 
 handled in the cli/__init__.
 
-I was going to make a TypedDict for this, but setting it up looked a lot like Pydantic.
-So maybe it should just be a model? Seems a lot for a var.
-
-Will look like:
-
-{'updates': [
-             {header: <val>,
-              key: <val>,
-              value: <val>}, ...],
- 'deletes': [
-             {header: <val>,
-              key: <val>,
-              value: <val>}, ...]
- }
 """
 
-# This could (should?) be a pydantic class?
-delayed_changes: Dict[str, List[Dict[str, str]]] = {}
+delayed_changes: DelayedChanged = DelayedChanged()
 
 # Why is this a function?
 ensure_config_files_exist(__version__, __app_doc_version__)
 
 versions_are_correct: bool = False
-while not versions_are_correct:
-    conf_file: Path = get_proj_conf_file('app')
-    with conf_file.open(mode='r') as file:
-        toml_config: TOMLDocument = load(file)
+retry: int = 0
+conf_file: Path = get_proj_conf_file('app')
+with conf_file.open(mode='r') as file:
+    toml_config: TOMLDocument = load(file)
 
-    check_app_version(__version__, toml_config)
-    app_doc_version_check: int = check_doc_version(__version__, __app_doc_version__, toml_config, conf_file)
+while not versions_are_correct and retry <= 3:
+    try:
+        check_app_version(__version__, toml_config)
+        app_doc_version_check: int = check_doc_version(__version__, __app_doc_version__, toml_config, conf_file)
 
-    # There is a better way of doing this.
-    if app_doc_version_check == 0:
-        versions_are_correct = True
+        # There is a better way of doing this.
+        if app_doc_version_check == 0:
+            versions_are_correct = True
+        else:
+            retry += 1
+
+    except NonExistentKey as e:
+        console.print("What\'re you doing mate?!")
+        toml_config['app_settings'] = refresh_config(toml_config['app_settings'], __version__, __app_doc_version__)
+        delayed_changes.needs_rewriting({'app': True})
+        retry += 1
+
+if retry > 3:
+    console.print('Ah, you borked it.')
 
 ignored_settings: Optional[List[Dict[str, Any]]]
 if toml_config['ignored_settings']:
@@ -93,9 +93,7 @@ except ValidationError as e:
     if 'value_error.missing' in errors:
         console.print('You seem to be missing value from stencil_app_config.toml.')
         console.print('Quickly refreshing fields for you, this will not delete any current info.')
-        full_app_settings: tomlTable = _make_app_settings(__version__, __app_doc_version__)
-        full_app_settings.update(**toml_config['app_settings'])
-        toml_config['app_settings'] = full_app_settings
+        toml_config['app_settings'] = refresh_config(toml_config['app_settings'], __version__, __app_doc_version__)
 
     extra_fields: List[str] = [extra['loc'][0]
                                for extra in e.errors()
