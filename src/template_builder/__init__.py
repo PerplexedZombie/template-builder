@@ -69,6 +69,7 @@ while not versions_are_correct and retry <= 3:
         else:
             retry += 1
 
+
     except NonExistentKey as e:
         console.print("What\'re you doing mate?!")
         toml_config['app_settings'] = refresh_config(toml_config['app_settings'], __version__, __app_doc_version__)
@@ -79,10 +80,14 @@ if retry > 3:
     console.print('Ah, you borked it.')
 
 ignored_settings: Optional[List[Dict[str, Any]]]
-if toml_config['ignored_settings']:
-    ignored_settings = [{k: v} for k, v in toml_config['ignored_settings'].items()]
-else:
+try:
+    if toml_config['ignored_settings']:
+        ignored_settings = [{k: v} for k, v in toml_config['ignored_settings'].items()]
+    else:
+        ignored_settings = None
+except NonExistentKey as e:
     ignored_settings = None
+    delayed_changes.needs_rewriting({'app': True})
 
 try:
     app_conf: AppModel = AppModel(project_dir=project_dir_, **toml_config['app_settings'], **toml_config['cached_info'],
@@ -116,6 +121,7 @@ except ValidationError as e:
                                       ignored_settings=ignored_settings)
     except ValidationError as e:
         raise Exit(1)
+
 
 def confirm_template_dir() -> Path:
     if app_conf.custom_model_folder:

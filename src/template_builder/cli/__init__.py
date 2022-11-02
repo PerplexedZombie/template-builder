@@ -11,20 +11,23 @@ from src.template_builder.logic_files.init_scripts import _make_cache_config
 from src.template_builder.logic_files.init_scripts import _make_stencil_app_config
 from src.template_builder.logic_files.init_scripts import _write_new_conf_file
 from src.template_builder.logic_files.init_scripts import refresh_config
+from typing import Dict
+from typing import Any
 
 # TODO: Finish this..
-if delayed_changes.updates:
+if delayed_changes.updates is not None:
     for i in delayed_changes.updates:
         _update_config(i['file'], i['header'], {i['key']: i['val']})
-# if delayed_changes.deletes:
+# if delayed_changes.deletes is not None:
 #     for i in delayed_changes.deletes:
 
-if delayed_changes.rewrites:
+if delayed_changes.rewrites is not None:
     for i in delayed_changes.rewrites:
         if i.get('app'):
             p: Path = get_proj_conf_file('app')
+            cur_conf: Dict[str, Any] = app_conf.dict(include={'app_settings'})
             new_conf = _make_stencil_app_config(__version__, __app_doc_version__)
-            new_conf['app_settings'] = refresh_config()
+            new_conf['app_settings'] = refresh_config(cur_conf, __version__, __app_doc_version__)
             _write_new_conf_file(p, new_conf)
         elif i.get('file'):
             p: Path = get_proj_conf_file('file')
@@ -32,7 +35,6 @@ if delayed_changes.rewrites:
             _write_new_conf_file(p, new_conf)
         else:
             print('oh..?')
-
 
 
 if app_conf.custom_model_folder:

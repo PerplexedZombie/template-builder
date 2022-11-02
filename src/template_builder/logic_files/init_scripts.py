@@ -364,7 +364,8 @@ def check_doc_version(app_version: str, doc_version: str, loaded_conf: TOMLDocum
 
     return 0
 
-def refresh_config(conf: Dict[str, Any] ,app_ver: str, doc_ver: str, conf_name: str = 'app') -> tomlTable:
+
+def refresh_config(conf: Dict[str, Any], app_ver: str, doc_ver: str, conf_name: str = 'app') -> tomlTable:
     """
     Rebuild but keep the values of provided settings from toml.
 
@@ -385,7 +386,7 @@ def refresh_config(conf: Dict[str, Any] ,app_ver: str, doc_ver: str, conf_name: 
     elif conf_name == 'app':
         cleaned = _make_app_settings(app_ver, doc_ver)
 
-    cleaned.update(**conf)
+    cleaned = cleaned.update(**conf)
 
     return cleaned
 
