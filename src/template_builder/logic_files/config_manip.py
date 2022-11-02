@@ -70,6 +70,8 @@ def _correct_default_val(value_type: str) -> Union[List[Any], str, int]:
     nested = compile(r'List')
     nested_type = compile(r'string|int')
 
+    logger.debug(value_type)
+
     if not known.match(value_type):
         logger.debug(f'no match for {value_type=}')
         if value_type == '':
@@ -80,7 +82,7 @@ def _correct_default_val(value_type: str) -> Union[List[Any], str, int]:
         if value_type == 'string':
             logger.debug(f'matched string for {value_type=}')
             return _toml_literal_string()
-        elif value_type == 'int':
+        elif value_type == 'integer':
             logger.debug(f'matched int for {value_type=}')
             return 0
         elif nested.match(value_type):
